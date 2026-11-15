@@ -128,9 +128,6 @@ LiverCancer_AI/
 ├── README.md
 ├── requirements.txt            # thư viện Python (local); requirements-lock.txt = phiên bản chính xác đã dùng
 ├── requirements-colab.txt      # thư viện cho notebook Colab
-├── MO_WEBSITE_ONLINE.bat       # bật website online (Cloudflare Pages + Quick Tunnel), xem docs/DEPLOY_CLOUDFLARE.md
-├── TAT_WEBSITE_ONLINE.bat      # tắt website online
-├── QUAN_LY_MAY_CHU_AI.bat      # trạng thái / khởi động lại / tự khởi động máy chủ AI
 ├── configs/                    # đường dẫn dữ liệu, cấu hình YOLO, Tumor Zoom, bộ phân loại (kèm SHA256 trọng số)
 ├── data/                       # split theo bệnh nhân (đóng băng), danh sách cách ly; data/processed/ do script sinh ra
 ├── docs/                       # kế hoạch từng giai đoạn, hướng dẫn chạy, website, triển khai
@@ -192,6 +189,8 @@ Trọng số **CT** (YOLO11n-CT + Hybrid CT, khoảng 160 MB) nằm ở mục **
    powershell -ExecutionPolicy Bypass -File scripts\web\run_website.ps1     # mở http://127.0.0.1:8000
    ```
 3. Chọn **Phân tích CT** rồi tải lên tệp NIfTI (`.nii.gz`), DICOM (thư mục hoặc `.zip`) hoặc ảnh PNG/JPG của một lát cắt.
+
+Bản trình diễn online của tác giả dùng Cloudflare Pages cho giao diện và Cloudflare Quick Tunnel tới máy chủ AI trên máy tác giả; cách làm được mô tả trong [docs/DEPLOY_CLOUDFLARE.md](docs/DEPLOY_CLOUDFLARE.md). Các tệp bật/tắt bản online gắn với tài khoản Cloudflare của tác giả nên không có trong repo; để chạy trên máy của bạn chỉ cần `run_website.ps1` như trên.
 
 Chạy pipeline từ dòng lệnh, không cần website: `.venv\Scripts\python scripts\90_run_pipeline.py --help` (hướng dẫn trong [docs/PIPELINE_VSCODE.md](docs/PIPELINE_VSCODE.md)).
 
