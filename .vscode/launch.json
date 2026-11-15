@@ -1,0 +1,225 @@
+{
+  // Run and Debug (Ctrl+Shift+D) -> pick a configuration -> F5. Docs: docs/INFERENCE_DEMO_VSCODE.md
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "🌐 Website LiverCancer AI chính thức (http://127.0.0.1:8000)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["server.main:app", "--host", "127.0.0.1", "--port", "8000"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "🌐 Website: kiểm thử tự động trên trình duyệt Edge (cần website đang chạy)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/98_website_e2e.py",
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Website cũ (Streamlit, http://localhost:8501) – đã được thay thế",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "streamlit",
+      "args": ["run", "app/streamlit_app.py"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "🧠 Pipeline AI: một bệnh nhân (YOLO → Tumor Zoom → phân loại)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/90_run_pipeline.py",
+      "args": ["--modality", "${input:modality}", "--patient", "${input:patientId}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🧠 Pipeline AI: file NIfTI tự chọn",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/90_run_pipeline.py",
+      "args": ["--modality", "${input:modality}", "--nifti", "${input:niftiPath}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "📊 Pipeline AI: đánh giá TOÀN BỘ Validation (CT + MRI) + báo cáo tiếng Việt",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/92_pipeline_validation.py",
+      "args": [],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "🛡️ Pipeline AI: Validation khi BẬT Evidence Gate + so sánh trước/sau",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/92_pipeline_validation.py",
+      "args": ["--evidence-gate", "on", "--tag", "gate"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pipeline AI: so sánh trước/sau Evidence Gate (từ cache)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/94_gate_comparison.py",
+      "args": [],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Pipeline AI: kiểm thử trên Validation + báo cáo",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/91_pipeline_val_demo.py",
+      "args": [],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Phân loại: chạy thử (smoke) — chọn CT/MRI và mô hình",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/81_train_classifier.py",
+      "args": ["--modality", "${input:modality}", "--model", "${input:clsModel}", "--smoke"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Phân loại: đánh giá một run trên Validation",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/82_eval_classifier.py",
+      "args": ["--modality", "${input:modality}", "--run", "${input:clsRun}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Tumor Zoom: đánh giá trên Validation (CT + MRI)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/71_eval_roi_val.py",
+      "args": [],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "YOLO demo: CT + MRI trên Val, conf 0.12 (đã chốt)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/60_yolo_inference_demo.py",
+      "args": [],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "YOLO demo: bản so sánh ở conf 0.25",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/60_yolo_inference_demo.py",
+      "args": ["--conf", "0.25", "--out-tag", "conf025"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "YOLO demo: chạy lại trên CPU (không vẽ hình)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/60_yolo_inference_demo.py",
+      "args": ["--device", "cpu", "--no-figures"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "YOLO CT: dự đoán một volume (P0267, pha C3)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/61_yolo_predict_nifti.py",
+      "args": ["--modality", "ct", "--patient", "P0267", "--series", "C3", "--conf", "${input:conf}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "YOLO MRI: dự đoán một volume (MR179970, C+V)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/61_yolo_predict_nifti.py",
+      "args": ["--modality", "mri", "--patient", "MR179970", "--series", "C+V", "--conf", "${input:conf}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "YOLO: dự đoán file NIfTI tự chọn",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/scripts/61_yolo_predict_nifti.py",
+      "args": ["--modality", "${input:modality}", "--nifti", "${input:niftiPath}", "--conf", "${input:conf}"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1", "PYTHONIOENCODING": "utf-8"},
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "pytest: kiểm tra đường suy luận",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/test_yolo_inference.py", "-v"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "cwd": "${workspaceFolder}",
+      "env": {"YOLO_OFFLINE": "1"},
+      "console": "integratedTerminal"
+    }
+  ],
+  "inputs": [
+    {"id": "modality", "type": "pickString", "description": "Modality của file (CT và MRI dùng hai mô hình khác nhau)", "options": ["ct", "mri"]},
+    {"id": "niftiPath", "type": "promptString", "description": "Đường dẫn file ảnh .nii.gz"},
+    {"id": "patientId", "type": "promptString", "description": "Mã bệnh nhân (CT: P0267, MRI: MR179970). Dùng ca Validation khi phát triển", "default": "P0267"},
+    {"id": "clsModel", "type": "pickString", "description": "Mô hình phân loại", "options": ["hybrid", "resnet18", "swin_t"], "default": "hybrid"},
+    {"id": "clsRun", "type": "promptString", "description": "Thư mục run phân loại (có best.pt)", "default": "outputs/runs/cls_smoke/ct_hybrid_gt_s42"},
+    {"id": "conf", "type": "pickString", "description": "Ngưỡng confidence (0.12 = đã chốt trên Val, 0.25 = mặc định Ultralytics)", "options": ["0.12", "0.25"], "default": "0.12"}
+  ]
+}

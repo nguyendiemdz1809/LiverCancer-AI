@@ -1,0 +1,8 @@
+# CT vs MRI recognition of 2D images (website intake). Separate model, NOT part of the locked AI pipeline.
+# Trained on Train-patient slices + synthetic screenshot variants; epoch and threshold chosen on Val-A,
+# reported on Val-B (scripts/87_modality_classifier.py, reports/modality_recognition.md). Test never used.
+checkpoint: outputs/runs/modality/modality_cnn_s42/best.pt
+sha256: 5a6746e63f5ea1a92e4f3ffa2847797da46ccc407493cb32c45b6deac119ea9e
+input: 160
+threshold: 0.95          # API "auto" only (the website uses the user's CT / MRI choice); below it the request is refused
+metrics: outputs/runs/modality/modality_cnn_s42/metrics.json

@@ -1,0 +1,911 @@
+{
+ "lock_commit": "2e42271f5b034d88e6973019f67275ba3d0cee55",
+ "run": {
+  "started": "2026-10-26T22:23:36",
+  "lock_commit": "2e42271f5b034d88e6973019f67275ba3d0cee55",
+  "resumed": [],
+  "finished": "2026-10-26T22:50:19"
+ },
+ "ct": {
+  "n_patients": 54,
+  "n_lesion_patients": 42,
+  "n_controls": 12,
+  "failed": [],
+  "counts": {
+   "correct": 38,
+   "wrong": 2,
+   "rejected": 2,
+   "no_region": 0,
+   "failed": 0
+  },
+  "pipeline": {
+   "n": 42,
+   "correct": 38,
+   "labelled": 40,
+   "accuracy_all": 0.9047619047619048,
+   "accuracy_all_ci95": [
+    0.7793460477494668,
+    0.9623383611716879
+   ],
+   "accuracy_labelled": 0.95,
+   "coverage": 0.9523809523809523,
+   "macro_f1": 0.9274074074074075,
+   "balanced_accuracy": 0.9076923076923077,
+   "per_class": {
+    "HCC": {
+     "precision": 0.875,
+     "recall": 1.0,
+     "f1": 0.9333333333333333,
+     "support": 14
+    },
+    "ICC": {
+     "precision": 1.0,
+     "recall": 0.8,
+     "f1": 0.888888888888889,
+     "support": 15
+    },
+    "CHCC": {
+     "precision": 1.0,
+     "recall": 0.9230769230769231,
+     "f1": 0.9600000000000001,
+     "support": 13
+    }
+   },
+   "confusion": [
+    [
+     14,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     12,
+     0,
+     2
+    ],
+    [
+     1,
+     0,
+     12,
+     0
+    ]
+   ]
+  },
+  "bootstrap": {
+   "accuracy_all": [
+    0.8095238095238095,
+    0.9761904761904762
+   ],
+   "macro_f1": [
+    0.8393152845810564,
+    0.9876543209876543
+   ]
+  },
+  "oracle": {
+   "n": 42,
+   "correct": 41,
+   "labelled": 42,
+   "accuracy_all": 0.9761904761904762,
+   "accuracy_all_ci95": [
+    0.8767851883475174,
+    0.9957847045008997
+   ],
+   "accuracy_labelled": 0.9761904761904762,
+   "coverage": 1.0,
+   "macro_f1": 0.9759139784946237,
+   "balanced_accuracy": 0.9743589743589745,
+   "per_class": {
+    "HCC": {
+     "precision": 1.0,
+     "recall": 1.0,
+     "f1": 1.0,
+     "support": 14
+    },
+    "ICC": {
+     "precision": 0.9375,
+     "recall": 1.0,
+     "f1": 0.967741935483871,
+     "support": 15
+    },
+    "CHCC": {
+     "precision": 1.0,
+     "recall": 0.9230769230769231,
+     "f1": 0.9600000000000001,
+     "support": 13
+    }
+   },
+   "confusion": [
+    [
+     14,
+     0,
+     0,
+     0
+    ],
+    [
+     0,
+     15,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     12,
+     0
+    ]
+   ]
+  },
+  "ungated_ablation": {
+   "n": 42,
+   "correct": 40,
+   "labelled": 42,
+   "accuracy_all": 0.9523809523809523,
+   "accuracy_all_ci95": [
+    0.8420986468452026,
+    0.9868427513607937
+   ],
+   "accuracy_labelled": 0.9523809523809523,
+   "coverage": 1.0,
+   "macro_f1": 0.9529501915708812,
+   "balanced_accuracy": 0.9521367521367522,
+   "per_class": {
+    "HCC": {
+     "precision": 0.875,
+     "recall": 1.0,
+     "f1": 0.9333333333333333,
+     "support": 14
+    },
+    "ICC": {
+     "precision": 1.0,
+     "recall": 0.9333333333333333,
+     "f1": 0.9655172413793104,
+     "support": 15
+    },
+    "CHCC": {
+     "precision": 1.0,
+     "recall": 0.9230769230769231,
+     "f1": 0.9600000000000001,
+     "support": 13
+    }
+   },
+   "confusion": [
+    [
+     14,
+     0,
+     0,
+     0
+    ],
+    [
+     1,
+     14,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     12,
+     0
+    ]
+   ]
+  },
+  "detection": {
+   "volumes": 206,
+   "volumes_with_lesion": 159,
+   "volumes_lesion_detected": 146,
+   "lesions": 288,
+   "lesions_detected": 184,
+   "small": 71,
+   "small_detected": 11,
+   "patients_with_gt": 42,
+   "patients_no_true_lesion_found": 2,
+   "patients_no_region": 2,
+   "tracks": 1210,
+   "false_tracks": 890,
+   "false_tracks_per_volume": 4.320388349514563
+  },
+  "val_reference": {
+   "counts": {
+    "correct": 36,
+    "wrong": 4,
+    "rejected": 2,
+    "no_region": 0,
+    "failed": 0
+   },
+   "pipeline": {
+    "n": 42,
+    "correct": 36,
+    "labelled": 40,
+    "accuracy_all": 0.8571428571428571,
+    "accuracy_all_ci95": [
+     0.7215861764782122,
+     0.9328412431581007
+    ],
+    "accuracy_labelled": 0.9,
+    "coverage": 0.9523809523809523,
+    "macro_f1": 0.8766446269952581,
+    "balanced_accuracy": 0.8564102564102565,
+    "per_class": {
+     "HCC": {
+      "precision": 0.8235294117647058,
+      "recall": 1.0,
+      "f1": 0.9032258064516129,
+      "support": 14
+     },
+     "ICC": {
+      "precision": 0.9230769230769231,
+      "recall": 0.8,
+      "f1": 0.8571428571428571,
+      "support": 15
+     },
+     "CHCC": {
+      "precision": 1.0,
+      "recall": 0.7692307692307693,
+      "f1": 0.8695652173913044,
+      "support": 13
+     }
+    },
+    "confusion": [
+     [
+      14,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      12,
+      0,
+      2
+     ],
+     [
+      2,
+      1,
+      10,
+      0
+     ]
+    ]
+   },
+   "detection": {
+    "volumes": 210,
+    "volumes_with_lesion": 163,
+    "volumes_lesion_detected": 152,
+    "lesions": 275,
+    "lesions_detected": 177,
+    "small": 69,
+    "small_detected": 14,
+    "patients_with_gt": 42,
+    "patients_no_true_lesion_found": 0,
+    "patients_no_region": 1,
+    "tracks": 1367,
+    "false_tracks": 1057,
+    "false_tracks_per_volume": 5.033333333333333
+   },
+   "strict_correct": 36
+  },
+  "excluded_volumes": {
+   "excluded:ct_file_missing": 9,
+   "excluded:lesion_mask_empty": 1
+  },
+  "correct_without_true_lesion": [
+   "P0141",
+   "P0221"
+  ],
+  "strict_correct": 36,
+  "controls": {
+   "n": 12,
+   "cancer_label": 2,
+   "by_class": {
+    "ICC": 2
+   },
+   "rejected": 8,
+   "no_region": 2,
+   "cancer_label_ci95": [
+    0.04696414761482223,
+    0.44803635738467273
+   ],
+   "ungated_cancer_label": 10,
+   "val_reference": {
+    "n": 12,
+    "cancer_label": 2
+   }
+  }
+ },
+ "mri": {
+  "n_patients": 104,
+  "n_lesion_patients": 104,
+  "n_controls": 0,
+  "failed": [],
+  "counts": {
+   "correct": 52,
+   "wrong": 52,
+   "rejected": 0,
+   "no_region": 0,
+   "failed": 0
+  },
+  "pipeline": {
+   "n": 104,
+   "correct": 52,
+   "labelled": 104,
+   "accuracy_all": 0.5,
+   "accuracy_all_ci95": [
+    0.4056302261379199,
+    0.5943697738620801
+   ],
+   "accuracy_labelled": 0.5,
+   "coverage": 1.0,
+   "macro_f1": 0.3848819830962688,
+   "balanced_accuracy": 0.3753246753246753,
+   "per_class": {
+    "Hepatocellular_carcinoma": {
+     "precision": 0.49206349206349204,
+     "recall": 0.9393939393939394,
+     "f1": 0.6458333333333333,
+     "support": 33
+    },
+    "Intrahepatic_cholangiocarcinoma": {
+     "precision": 0.4444444444444444,
+     "recall": 0.3333333333333333,
+     "f1": 0.380952380952381,
+     "support": 12
+    },
+    "Hepatic_metastasis": {
+     "precision": 0.6666666666666666,
+     "recall": 0.18181818181818182,
+     "f1": 0.28571428571428575,
+     "support": 11
+    },
+    "Hepatic_hemangioma": {
+     "precision": 0.47058823529411764,
+     "recall": 0.5,
+     "f1": 0.48484848484848486,
+     "support": 16
+    },
+    "Hepatic_cyst": {
+     "precision": 0.6666666666666666,
+     "recall": 0.18181818181818182,
+     "f1": 0.28571428571428575,
+     "support": 11
+    },
+    "Hepatic_abscess": {
+     "precision": 1.0,
+     "recall": 0.09090909090909091,
+     "f1": 0.16666666666666669,
+     "support": 11
+    },
+    "FOCAL_NODULAR_HYPERPLASIA": {
+     "precision": 0.5,
+     "recall": 0.4,
+     "f1": 0.4444444444444445,
+     "support": 10
+    }
+   },
+   "confusion": [
+    [
+     31,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     6,
+     4,
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     5,
+     1,
+     2,
+     2,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     6,
+     0,
+     0,
+     8,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     4,
+     1,
+     0,
+     4,
+     2,
+     0,
+     0,
+     0
+    ],
+    [
+     7,
+     1,
+     0,
+     1,
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     4,
+     0,
+     1,
+     1,
+     0,
+     0,
+     4,
+     0
+    ]
+   ]
+  },
+  "bootstrap": {
+   "accuracy_all": [
+    0.40384615384615385,
+    0.5961538461538461
+   ],
+   "macro_f1": [
+    0.27251741197644563,
+    0.4853135281373765
+   ]
+  },
+  "oracle": {
+   "n": 104,
+   "correct": 52,
+   "labelled": 104,
+   "accuracy_all": 0.5,
+   "accuracy_all_ci95": [
+    0.4056302261379199,
+    0.5943697738620801
+   ],
+   "accuracy_labelled": 0.5,
+   "coverage": 1.0,
+   "macro_f1": 0.4527501991787707,
+   "balanced_accuracy": 0.43024891774891777,
+   "per_class": {
+    "Hepatocellular_carcinoma": {
+     "precision": 0.5319148936170213,
+     "recall": 0.7575757575757576,
+     "f1": 0.625,
+     "support": 33
+    },
+    "Intrahepatic_cholangiocarcinoma": {
+     "precision": 0.4166666666666667,
+     "recall": 0.4166666666666667,
+     "f1": 0.4166666666666667,
+     "support": 12
+    },
+    "Hepatic_metastasis": {
+     "precision": 0.25,
+     "recall": 0.09090909090909091,
+     "f1": 0.13333333333333333,
+     "support": 11
+    },
+    "Hepatic_hemangioma": {
+     "precision": 0.3333333333333333,
+     "recall": 0.4375,
+     "f1": 0.37837837837837834,
+     "support": 16
+    },
+    "Hepatic_cyst": {
+     "precision": 0.6666666666666666,
+     "recall": 0.5454545454545454,
+     "f1": 0.6,
+     "support": 11
+    },
+    "Hepatic_abscess": {
+     "precision": 0.5714285714285714,
+     "recall": 0.36363636363636365,
+     "f1": 0.4444444444444444,
+     "support": 11
+    },
+    "FOCAL_NODULAR_HYPERPLASIA": {
+     "precision": 1.0,
+     "recall": 0.4,
+     "f1": 0.5714285714285715,
+     "support": 10
+    }
+   },
+   "confusion": [
+    [
+     25,
+     6,
+     0,
+     2,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     6,
+     5,
+     0,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     5,
+     0,
+     1,
+     4,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     4,
+     0,
+     1,
+     7,
+     3,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     0,
+     5,
+     6,
+     0,
+     0,
+     0
+    ],
+    [
+     4,
+     1,
+     1,
+     1,
+     0,
+     4,
+     0,
+     0
+    ],
+    [
+     3,
+     0,
+     1,
+     2,
+     0,
+     0,
+     4,
+     0
+    ]
+   ]
+  },
+  "ungated_ablation": {
+   "n": 104,
+   "correct": 52,
+   "labelled": 104,
+   "accuracy_all": 0.5,
+   "accuracy_all_ci95": [
+    0.4056302261379199,
+    0.5943697738620801
+   ],
+   "accuracy_labelled": 0.5,
+   "coverage": 1.0,
+   "macro_f1": 0.3848819830962688,
+   "balanced_accuracy": 0.3753246753246753,
+   "per_class": {
+    "Hepatocellular_carcinoma": {
+     "precision": 0.49206349206349204,
+     "recall": 0.9393939393939394,
+     "f1": 0.6458333333333333,
+     "support": 33
+    },
+    "Intrahepatic_cholangiocarcinoma": {
+     "precision": 0.4444444444444444,
+     "recall": 0.3333333333333333,
+     "f1": 0.380952380952381,
+     "support": 12
+    },
+    "Hepatic_metastasis": {
+     "precision": 0.6666666666666666,
+     "recall": 0.18181818181818182,
+     "f1": 0.28571428571428575,
+     "support": 11
+    },
+    "Hepatic_hemangioma": {
+     "precision": 0.47058823529411764,
+     "recall": 0.5,
+     "f1": 0.48484848484848486,
+     "support": 16
+    },
+    "Hepatic_cyst": {
+     "precision": 0.6666666666666666,
+     "recall": 0.18181818181818182,
+     "f1": 0.28571428571428575,
+     "support": 11
+    },
+    "Hepatic_abscess": {
+     "precision": 1.0,
+     "recall": 0.09090909090909091,
+     "f1": 0.16666666666666669,
+     "support": 11
+    },
+    "FOCAL_NODULAR_HYPERPLASIA": {
+     "precision": 0.5,
+     "recall": 0.4,
+     "f1": 0.4444444444444445,
+     "support": 10
+    }
+   },
+   "confusion": [
+    [
+     31,
+     2,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    [
+     6,
+     4,
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     5,
+     1,
+     2,
+     2,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     6,
+     0,
+     0,
+     8,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     4,
+     1,
+     0,
+     4,
+     2,
+     0,
+     0,
+     0
+    ],
+    [
+     7,
+     1,
+     0,
+     1,
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     4,
+     0,
+     1,
+     1,
+     0,
+     0,
+     4,
+     0
+    ]
+   ]
+  },
+  "detection": {
+   "volumes": 828,
+   "volumes_with_lesion": 828,
+   "volumes_lesion_detected": 729,
+   "lesions": 873,
+   "lesions_detected": 741,
+   "small": 334,
+   "small_detected": 231,
+   "patients_with_gt": 104,
+   "patients_no_true_lesion_found": 0,
+   "patients_no_region": 0,
+   "tracks": 4299,
+   "false_tracks": 3502,
+   "false_tracks_per_volume": 4.229468599033816
+  },
+  "val_reference": {
+   "counts": {
+    "correct": 37,
+    "wrong": 41,
+    "rejected": 0,
+    "no_region": 0,
+    "failed": 0
+   },
+   "pipeline": {
+    "n": 78,
+    "correct": 37,
+    "labelled": 78,
+    "accuracy_all": 0.47435897435897434,
+    "accuracy_all_ci95": [
+     0.36737081694801105,
+     0.5837542832455336
+    ],
+    "accuracy_labelled": 0.47435897435897434,
+    "coverage": 1.0,
+    "macro_f1": 0.35787377078962207,
+    "balanced_accuracy": 0.37039246467817893,
+    "per_class": {
+     "Hepatocellular_carcinoma": {
+      "precision": 0.4375,
+      "recall": 0.84,
+      "f1": 0.5753424657534247,
+      "support": 25
+     },
+     "Intrahepatic_cholangiocarcinoma": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 9
+     },
+     "Hepatic_metastasis": {
+      "precision": 0.6666666666666666,
+      "recall": 0.25,
+      "f1": 0.36363636363636365,
+      "support": 8
+     },
+     "Hepatic_hemangioma": {
+      "precision": 0.5,
+      "recall": 0.5384615384615384,
+      "f1": 0.5185185185185186,
+      "support": 13
+     },
+     "Hepatic_cyst": {
+      "precision": 0.5,
+      "recall": 0.25,
+      "f1": 0.3333333333333333,
+      "support": 8
+     },
+     "Hepatic_abscess": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "support": 8
+     },
+     "FOCAL_NODULAR_HYPERPLASIA": {
+      "precision": 0.7142857142857143,
+      "recall": 0.7142857142857143,
+      "f1": 0.7142857142857143,
+      "support": 7
+     }
+    },
+    "confusion": [
+     [
+      21,
+      0,
+      0,
+      2,
+      0,
+      0,
+      2,
+      0
+     ],
+     [
+      6,
+      0,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0
+     ],
+     [
+      6,
+      0,
+      2,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      5,
+      0,
+      0,
+      7,
+      1,
+      0,
+      0,
+      0
+     ],
+     [
+      3,
+      1,
+      0,
+      2,
+      2,
+      0,
+      0,
+      0
+     ],
+     [
+      6,
+      1,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      5,
+      0
+     ]
+    ]
+   },
+   "detection": {
+    "volumes": 623,
+    "volumes_with_lesion": 622,
+    "volumes_lesion_detected": 540,
+    "lesions": 648,
+    "lesions_detected": 554,
+    "small": 266,
+    "small_detected": 188,
+    "patients_with_gt": 78,
+    "patients_no_true_lesion_found": 2,
+    "patients_no_region": 0,
+    "tracks": 3413,
+    "false_tracks": 2834,
+    "false_tracks_per_volume": 4.548956661316212
+   },
+   "strict_correct": 37
+  },
+  "excluded_volumes": {
+   "quarantined:json_box_vs_mask_mismatch": 4
+  },
+  "correct_without_true_lesion": [],
+  "strict_correct": 52,
+  "groups": {
+   "benign_as_malignant": 24,
+   "malignant_as_benign": 5,
+   "group_correct": 75,
+   "n_benign": 48,
+   "n_malignant": 56,
+   "n": 104
+  }
+ }
+}

@@ -1,0 +1,23 @@
+# Automatic Tumor Zoom (GĐ3). Detector + conf: configs/yolo_inference.yaml (conf 0.12, chosen on Val).
+# Merge / link / crop values are fixed design choices (docs/PHASE4_ROI_WEBSITE_PLAN.md §A.2).
+# The track filter (min_track_slices, min_track_conf) is chosen on Validation only by scripts/71_eval_roi_val.py
+# (rule in that script); values below are overwritten by --write-config. Never tuned on Test.
+common:
+  merge_iou: 0.5            # within a slice: merge boxes with IoU > 0.5 ...
+  merge_containment: 0.8    # ... or when > 80 % of the smaller box lies inside the other
+  link_iou: 0.3             # across slices: link a box to a track when IoU with its last box >= 0.3
+  link_max_gap: 1           # a track survives 1 slice without a box
+  min_track_slices: 1       # placeholder until chosen on Val
+  min_track_conf: 0.12      # placeholder until chosen on Val (= detector conf: no extra filter)
+  key_slices: 3             # representative slices per track (area x confidence)
+  crop_size: 224
+  margin_frac: 0.15         # local crop: box + max(15 % of longest side, 8 px) on each side, square
+  min_margin_px: 8
+  context_scale: 2.5        # context crop: 2.5 x longest box side, at least 128 px, square
+  context_min_px: 128
+ct:   # chosen on Val by scripts/71_eval_roi_val.py (2026-10-25T11:24:43): min FP tracks/volume s.t. lesion recall >= unfiltered-0.02 and volume recall >= unfiltered-0.01 (Val)
+  min_track_slices: 1
+  min_track_conf: 0.12
+mri:   # chosen on Val by scripts/71_eval_roi_val.py (2026-10-25T11:24:56): min FP tracks/volume s.t. lesion recall >= unfiltered-0.02 and volume recall >= unfiltered-0.01 (Val)
+  min_track_slices: 1
+  min_track_conf: 0.12

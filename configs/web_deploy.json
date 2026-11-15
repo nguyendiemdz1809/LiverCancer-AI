@@ -1,0 +1,12 @@
+{
+  "_comment": "Cloudflare Pages (giao diện tĩnh) + Quick Tunnel (máy chủ AI trên máy này). Xem docs/DEPLOY_CLOUDFLARE.md. Không ghi mã truy cập hay token vào file này.",
+  "cloudflare_account_id": "74ac12d2f4d87d2f159d80db714b73f9",
+  "pages_project": "livercancer-ai-demo",
+  "pages_url": "https://livercancer-ai-demo-7u5.pages.dev",
+  "pages_preview_origin_regex": "^https://[a-z0-9-]+\\.livercancer-ai-demo-7u5\\.pages\\.dev$",
+  "port": 8000,
+  "cloudflared": "tools/cloudflared/cloudflared.exe",
+  "cloudflared_version": "2026.10.0",
+  "cloudflared_sha256": "86aee4017b26625cee8484c113558f48effa4cd47f7aa05fcf425604e5d2b23c",
+  "cloudflared_url": "https://github.com/cloudflare/cloudflared/releases/download/2026.10.0/cloudflared-windows-amd64.exe"
+}

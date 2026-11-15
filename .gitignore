@@ -1,0 +1,103 @@
+# --- Environments ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# --- Secrets / credentials ---
+.env
+.env.*
+*.env
+secrets/
+*.pem
+*.key
+credentials*.json
+service_account*.json
+kaggle.json
+.huggingface/
+.netrc
+*token*
+*.secret
+.claude/settings.local.json
+
+# --- Caches ---
+.cache/
+cache/
+.mypy_cache/
+.ruff_cache/
+wandb/
+mlruns/
+
+# --- Patient data & derived data (never commit) ---
+# Raw medical images
+*.nii
+*.nii.gz
+*.dcm
+*.mha
+*.mhd
+*.nrrd
+# Arrays / derived volumes
+*.npy
+*.npz
+*.h5
+*.hdf5
+# Generated manifests / processed slices / results
+data/manifests/*
+data/processed/*
+data/pilot/
+*.zip
+outputs/
+runs/
+# Audit outputs contain patient IDs and patient images
+reports/*.json
+reports/*.csv
+reports/audit/
+reports/figures/*
+reports/tables/*
+*.png
+*.jpg
+*.log
+!**/.gitkeep
+# Splits (patient IDs only) are tracked for reproducibility: data/splits/*.csv
+
+# --- Model weights / checkpoints ---
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.engine
+*.safetensors
+*.bin
+weights/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/launch.json
+# patient-level tables of the pipeline validation (source of truth: outputs/predictions/pipeline_validation/)
+reports/pipeline_validation*/**/*.csv
+reports/pipeline_validation*/**/*.json
+# per-patient Test tables (source of truth: outputs/final_test/)
+reports/final_test/*.csv
+
+# website (React + Vite): dependencies and build output are regenerated (npm install / npm run build)
+web/node_modules/
+web/dist/
+web/.env
+web/.env.*
+!web/.env.example
+web/*.tsbuildinfo
+
+# portable tools downloaded for deployment (cloudflared.exe)
+tools/
+
+# local copy of the locked Test set for manual website testing (dataset images; MRI CC BY-NC): never commit
+TEST_3D_WEBSITE/
+TEST_2D_WEBSITE/
+
+# ảnh minh họa của README (chọn có chủ đích, không có ảnh MRI)
+!docs/images/*.png

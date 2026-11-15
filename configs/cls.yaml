@@ -1,0 +1,88 @@
+# GĐ4/GĐ5 — lesion classification (Hybrid CNN + Transformer). Labels verified on 2026-10-25 (reports/cls_data_report.md):
+#   CT  PLC-CECT  : patient-level histological diagnosis (patient_data.csv `cancer_type`, one label per patient) applied to
+#                   every lesion ROI of that patient. CN (controls, no lesion data) is NOT a classifier class.
+#   MRI LLD-MMRI  : lesion-level category of the original annotation (LLD_MMRI_Annotation.json, 1 lesion per series,
+#                   identical across the 8 series of a patient). 7 classes + benign/malignant grouping (Category_info).
+# Splits are the frozen patient-level splits (data/splits/*_split.csv). Test is never exported or used before the final run.
+ct:
+  classes: [HCC, ICC, CHCC]
+  class_names_vi: ["HCC (ung thư biểu mô tế bào gan)", "ICC (ung thư biểu mô đường mật trong gan)",
+                   "CHCC (ung thư hỗn hợp tế bào gan – đường mật)"]
+  yolo_dataset: data/processed/full/yolo_ct          # exported slices + GT boxes (Val: every lesion slice; Train: 1/2)
+  slice_min_gap: 2                                   # adjacent CT slices are near-identical: keep key slices >= 2 apart
+mri:
+  classes: [Hepatocellular_carcinoma, Intrahepatic_cholangiocarcinoma, Hepatic_metastasis,
+            Hepatic_hemangioma, Hepatic_cyst, Hepatic_abscess, FOCAL_NODULAR_HYPERPLASIA]
+  class_names_vi: ["HCC (ung thư biểu mô tế bào gan)", "ICC (ung thư đường mật trong gan)", "Di căn gan", "U máu gan",
+                   "Nang gan", "Áp xe gan", "FNH (tăng sản nốt khu trú)"]
+  groups: {Malignant: [Hepatocellular_carcinoma, Intrahepatic_cholangiocarcinoma, Hepatic_metastasis],
+           Benign: [Hepatic_hemangioma, Hepatic_cyst, Hepatic_abscess, FOCAL_NODULAR_HYPERPLASIA]}
+  yolo_dataset: data/processed/pilot/yolo_mri         # agreed mask/JSON slices only; quarantined series excluded
+  slice_min_gap: 1
+
+roi:                     # crops come from livercancer.roi (same Tumor Zoom as the website); params in configs/roi.yaml
+  slices_per_lesion: {train: 6, val: 5}              # key slices per lesion (largest area first, min gap above)
+  out_dir: data/processed/cls                        # data/processed/cls/<mod>/{images/<split>/*.png, manifest.csv}
+
+train:                   # defaults; every run stores its full config in <run>/config.json
+  model: hybrid          # resnet18 | resnet50 | swin_t | hybrid
+  roi_source: gt         # rows of the manifest used for training: gt (baseline) | gt+yolo (matched YOLO ROIs added)
+  epochs: 40
+  patience: 8            # early stopping on Val macro-F1 (ROI level)
+  batch_size: 32         # T4; reduce (e.g. 16 / 8) on CUDA OOM — the trainer also halves it automatically
+  accum_steps: 1
+  lr_backbone: 0.0001
+  lr_head: 0.001
+  weight_decay: 0.05
+  warmup_epochs: 1
+  label_smoothing: 0.05
+  class_weighting: inverse_sqrt   # none | inverse | inverse_sqrt (per-class weights from Train ROI counts)
+  fusion: concat         # hybrid only: concat | gated
+  fusion_dim: 256
+  dropout: 0.3
+  amp: true
+  pretrained: true       # ImageNet weights from torchvision (downloaded on Colab)
+  seed: 42
+  num_workers: 2
+  deterministic: false
+
+eval:
+  patient_aggregations: [mean_prob, conf_weighted, majority_vote, top3_mean]   # chosen on Val (macro-F1), never on Test
+
+inference:              # used by livercancer.classification.inference and livercancer.pipeline (scripts; website later)
+  # Provisional choice on Validation only (2026-10-26, reports/pipeline_val_report.md). Test not used.
+  # CT: hybrid = best Val ROI macro-F1 of the 3 CT runs (0.863 vs swin_t 0.852 vs resnet18 0.833); patient level all 38/42.
+  # aggregation = Val choice stored by the notebook in <run>/eval_val/metrics_val.json (re-computed locally: identical).
+  ct:
+    checkpoint: outputs/runs/cls/ct_hybrid_gt_s42/best.pt
+    sha256: 291d3b7e50f838b1aa241644090e072ce6f941f222eb4d3b8d3b3e5ab6091a82
+    aggregation: mean_prob
+    metrics: outputs/runs/cls/ct_hybrid_gt_s42/eval_val/metrics_val.json
+    reliable: true        # research use only; still not a diagnosis
+    evidence_gate:        # reject option chosen on Val (scripts/93_limitations_analysis.py, reports/pipeline_validation/han_che/)
+      enabled: true       # FINAL (Val only, 2026-10-26): real gated Val run = CN labelled 11/12 -> 2/12, cancer correct 38 -> 36, rejected 2/42
+                          # (reports/pipeline_validation/so_sanh_evidence_gate.md). LOO: CN rejected 9/12, cancer kept 40/42
+      kind: n_volumes     # classify only when a region with YOLO conf >= conf_min exists in >= k phases
+      conf_min: 0.4
+      k: 2
+      single_volume:      # one uploaded file (no multi-phase evidence): highest YOLO confidence >= 0.35
+        kind: max_conf
+        conf_min: 0.35
+  mri:
+    checkpoint: outputs/runs/cls/mri_hybrid_gt_s42/best.pt
+    sha256: 77cc2d3cd19e9c6de9d7410bf9bbfa34b7c0fc6cac78f73805d10df37e8f9a84
+    aggregation: conf_weighted
+    metrics: outputs/runs/cls/mri_hybrid_gt_s42/eval_val/metrics_val.json
+    reliable: false       # Val ROI acc 0.478 / macro-F1 0.428: predictions must be shown as NOT reliable
+    evidence_gate:        # CT rule transferred to MRI ("phase" -> "sequence") for EVALUATION ONLY: MRI Val has no control patients,
+      enabled: false      # so no MRI-specific rule can be chosen; not enabled. Val with the CT rule: 0/78 rejected (scripts/94_gate_comparison.py)
+      kind: n_volumes
+      conf_min: 0.4
+      k: 2
+      single_volume:
+        kind: max_conf
+        conf_min: 0.35
+  slices_per_track: {ct: 5, mri: 5}   # = roi.slices_per_lesion.val (how the Val YOLO ROIs used to choose the aggregation were built)
+  alternatives:          # other trained CT runs, selectable by path
+    ct_resnet18: outputs/runs/cls/ct_resnet18_gt_s42/best.pt
+    ct_swin_t: outputs/runs/cls/ct_swin_t_gt_s42/best.pt

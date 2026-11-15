@@ -1,0 +1,28 @@
+# YOLO lesion detectors used for inference (GĐ3 → ROI zoom, website). CT and MRI are separate models; single class 0 = lesion.
+# Weights are trained on Colab (not retrained here); sha256 is checked when a detector is loaded.
+# Detection stage closed on 2026-10-25 (user decision): E0 weights are final, no E1/E3.
+# `conf` = operating threshold chosen on each modality's OWN Validation set: argmax F2 (box level, IoU >= 0.5), grid 0.01–0.80
+# (scripts/53_threshold_sweep.py -> <run>/analysis/threshold_choice.json). Both modalities came out at 0.12.
+# Never tuned on Test. `conf_ultralytics_default` is kept only to reproduce the earlier 0.25 demo.
+ct:
+  run: outputs/runs/yolo_ct/yolo11n_e50_img512_baseline        # CT-E0: best epoch 15, early stop 35/50
+  weights: outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/weights/best.pt
+  sha256: 65c126f310d8b7751f67625d917252ff5b8984ff741795d2e92b496a831f5707
+  dataset: data/processed/full/yolo_ct                          # data the run was trained/validated on (yolo_ct_full.zip)
+  imgsz: 512
+  conf: 0.12        # Val CT: P 0.474 · R 0.578 · volumes detected 91.4% · patients 42/42 (reports/ct_e0_analysis.md §7.7)
+  conf_source: outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/analysis/threshold_choice.json
+  conf_ultralytics_default: 0.25
+  iou: 0.7          # NMS IoU (Ultralytics default, same as validation)
+  max_det: 300
+mri:
+  run: outputs/runs/yolo_mri/yolo11n_e50_img512_baseline       # MRI-E0: best epoch 24, early stop 44/50
+  weights: outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/weights/best.pt
+  sha256: cc6fef44446514d598e6f4a862c78e0eb214d28f2f7a4dac82ce4b060b157377
+  dataset: data/processed/pilot/yolo_mri                        # yolo_mri_pilot.zip
+  imgsz: 512
+  conf: 0.12        # Val MRI: P 0.634 · R 0.745 · series detected 85.9% · patients 77/78 (reports/mri_e0_analysis.md §7.7)
+  conf_source: outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/analysis/threshold_choice.json
+  conf_ultralytics_default: 0.25
+  iou: 0.7
+  max_det: 300

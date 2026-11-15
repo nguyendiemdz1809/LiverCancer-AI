@@ -1,0 +1,24 @@
+# Dataset roots. Raw data is READ-ONLY — never write under these paths.
+# Override per machine with env var LIVER_ENV=colab (section `colab`).
+local:
+  ct:
+    root: E:/LiverDataset/CT/PLC-CECT
+    csv: E:/LiverDataset/CT/PLC-CECT/patient_data.csv
+    data_dir: E:/LiverDataset/CT/PLC-CECT/CECT      # CSV paths are relative to this dir
+  mri:
+    root: E:/LiverDataset/LLD-MMRI-MedSAM2
+    images: E:/LiverDataset/LLD-MMRI-MedSAM2/images
+    labels: E:/LiverDataset/LLD-MMRI-MedSAM2/labels
+    annotation: E:/LiverDataset/LLD-MMRI-MedSAM2/LLD_MMRI_Annotation.json
+    readme: E:/LiverDataset/LLD-MMRI-MedSAM2/README.md
+
+colab:
+  # Only preprocessed 2D data is uploaded (after explicit user permission).
+  processed_root: /content/drive/MyDrive/LiverCancer_AI/processed
+
+project:
+  manifests: data/manifests
+  splits: data/splits
+  processed: data/processed
+  outputs: outputs
+  reports: reports

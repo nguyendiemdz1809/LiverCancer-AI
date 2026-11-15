@@ -1,0 +1,536 @@
+{
+ "generated": "2026-10-27T11:00:43",
+ "locked_commit": "2e42271",
+ "test_run": {
+  "started": "2026-10-26T22:23:36",
+  "finished": "2026-10-26T22:50:19"
+ },
+ "modalities": {
+  "ct": {
+   "classes": [
+    {
+     "code": "HCC",
+     "name": "HCC"
+    },
+    {
+     "code": "ICC",
+     "name": "ICC"
+    },
+    {
+     "code": "CHCC",
+     "name": "CHCC"
+    }
+   ],
+   "val": {
+    "n_patients": 54,
+    "n_lesion_patients": 42,
+    "counts": {
+     "correct": 36,
+     "wrong": 4,
+     "rejected": 2,
+     "no_region": 0,
+     "failed": 0
+    },
+    "strict_correct": 36,
+    "classification": {
+     "n": 42,
+     "correct": 36,
+     "labelled": 40,
+     "accuracy_all": 0.8571,
+     "accuracy_labelled": 0.9,
+     "macro_f1": 0.8766,
+     "balanced_accuracy": 0.8564,
+     "per_class": [
+      {
+       "code": "HCC",
+       "name": "HCC",
+       "precision": 0.8235,
+       "recall": 1.0,
+       "f1": 0.9032,
+       "support": 14
+      },
+      {
+       "code": "ICC",
+       "name": "ICC",
+       "precision": 0.9231,
+       "recall": 0.8,
+       "f1": 0.8571,
+       "support": 15
+      },
+      {
+       "code": "CHCC",
+       "name": "CHCC",
+       "precision": 1.0,
+       "recall": 0.7692,
+       "f1": 0.8696,
+       "support": 13
+      }
+     ]
+    },
+    "detection": {
+     "volumes_with_lesion": 163,
+     "volumes_lesion_detected": 152,
+     "lesions": 275,
+     "lesions_detected": 177,
+     "small": 69,
+     "small_detected": 14,
+     "patients_with_gt": 42,
+     "patients_no_true_lesion_found": 0,
+     "false_tracks_per_volume": 5.03
+    },
+    "source": "outputs/predictions/pipeline_validation_gate/ct/cases",
+    "controls": {
+     "n": 12,
+     "cancer_label": 2,
+     "rejected": 9,
+     "no_region": 1
+    }
+   },
+   "test": {
+    "n_patients": 54,
+    "n_lesion_patients": 42,
+    "counts": {
+     "correct": 38,
+     "wrong": 2,
+     "rejected": 2,
+     "no_region": 0,
+     "failed": 0
+    },
+    "strict_correct": 36,
+    "accuracy_ci95": [
+     0.7793,
+     0.9623
+    ],
+    "macro_f1_ci95": [
+     0.8393,
+     0.9877
+    ],
+    "classification": {
+     "n": 42,
+     "correct": 38,
+     "labelled": 40,
+     "accuracy_all": 0.9048,
+     "accuracy_labelled": 0.95,
+     "macro_f1": 0.9274,
+     "balanced_accuracy": 0.9077,
+     "per_class": [
+      {
+       "code": "HCC",
+       "name": "HCC",
+       "precision": 0.875,
+       "recall": 1.0,
+       "f1": 0.9333,
+       "support": 14
+      },
+      {
+       "code": "ICC",
+       "name": "ICC",
+       "precision": 1.0,
+       "recall": 0.8,
+       "f1": 0.8889,
+       "support": 15
+      },
+      {
+       "code": "CHCC",
+       "name": "CHCC",
+       "precision": 1.0,
+       "recall": 0.9231,
+       "f1": 0.96,
+       "support": 13
+      }
+     ]
+    },
+    "oracle": {
+     "n": 42,
+     "correct": 41
+    },
+    "detection": {
+     "volumes_with_lesion": 159,
+     "volumes_lesion_detected": 146,
+     "lesions": 288,
+     "lesions_detected": 184,
+     "small": 71,
+     "small_detected": 11,
+     "patients_with_gt": 42,
+     "patients_no_true_lesion_found": 2,
+     "false_tracks_per_volume": 4.32
+    },
+    "source": "reports/final_test/metrics_test.json",
+    "controls": {
+     "n": 12,
+     "cancer_label": 2,
+     "rejected": 8,
+     "no_region": 2,
+     "ungated_cancer_label": 10,
+     "cancer_label_ci95": [
+      0.047,
+      0.448
+     ]
+    },
+    "ungated_correct": 40
+   },
+   "yolo": {
+    "model": "YOLO11n",
+    "imgsz": 512,
+    "best_epoch": 15,
+    "epochs_run": 35,
+    "precision": 0.6881,
+    "recall": 0.4805,
+    "map50": 0.5507,
+    "map50_95": 0.2823,
+    "conf": 0.12,
+    "conf_rule": "F2 lớn nhất trên Validation",
+    "n_val_slices": 14627,
+    "source": "outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/metrics_val.json"
+   },
+   "roi_classifier_val": {
+    "n_rois": 1046,
+    "accuracy": 0.8623,
+    "macro_f1": 0.8629,
+    "source": "outputs/runs/cls/ct_hybrid_gt_s42/eval_val/metrics_val.json",
+    "note": "Mức ROI, vùng cắt theo nhãn chuẩn (oracle)"
+   },
+   "evidence_gate": {
+    "conf_min": 0.4,
+    "k": 2,
+    "single_conf_min": 0.35
+   }
+  },
+  "mri": {
+   "classes": [
+    {
+     "code": "Hepatocellular_carcinoma",
+     "name": "HCC"
+    },
+    {
+     "code": "Intrahepatic_cholangiocarcinoma",
+     "name": "ICC"
+    },
+    {
+     "code": "Hepatic_metastasis",
+     "name": "Di căn gan"
+    },
+    {
+     "code": "Hepatic_hemangioma",
+     "name": "U máu gan"
+    },
+    {
+     "code": "Hepatic_cyst",
+     "name": "Nang gan"
+    },
+    {
+     "code": "Hepatic_abscess",
+     "name": "Áp xe gan"
+    },
+    {
+     "code": "FOCAL_NODULAR_HYPERPLASIA",
+     "name": "FNH"
+    }
+   ],
+   "val": {
+    "n_patients": 78,
+    "n_lesion_patients": 78,
+    "counts": {
+     "correct": 37,
+     "wrong": 41,
+     "rejected": 0,
+     "no_region": 0,
+     "failed": 0
+    },
+    "strict_correct": 37,
+    "classification": {
+     "n": 78,
+     "correct": 37,
+     "labelled": 78,
+     "accuracy_all": 0.4744,
+     "accuracy_labelled": 0.4744,
+     "macro_f1": 0.3579,
+     "balanced_accuracy": 0.3704,
+     "per_class": [
+      {
+       "code": "Hepatocellular_carcinoma",
+       "name": "HCC",
+       "precision": 0.4375,
+       "recall": 0.84,
+       "f1": 0.5753,
+       "support": 25
+      },
+      {
+       "code": "Intrahepatic_cholangiocarcinoma",
+       "name": "ICC",
+       "precision": 0.0,
+       "recall": 0.0,
+       "f1": 0.0,
+       "support": 9
+      },
+      {
+       "code": "Hepatic_metastasis",
+       "name": "Di căn gan",
+       "precision": 0.6667,
+       "recall": 0.25,
+       "f1": 0.3636,
+       "support": 8
+      },
+      {
+       "code": "Hepatic_hemangioma",
+       "name": "U máu gan",
+       "precision": 0.5,
+       "recall": 0.5385,
+       "f1": 0.5185,
+       "support": 13
+      },
+      {
+       "code": "Hepatic_cyst",
+       "name": "Nang gan",
+       "precision": 0.5,
+       "recall": 0.25,
+       "f1": 0.3333,
+       "support": 8
+      },
+      {
+       "code": "Hepatic_abscess",
+       "name": "Áp xe gan",
+       "precision": 0.0,
+       "recall": 0.0,
+       "f1": 0.0,
+       "support": 8
+      },
+      {
+       "code": "FOCAL_NODULAR_HYPERPLASIA",
+       "name": "FNH",
+       "precision": 0.7143,
+       "recall": 0.7143,
+       "f1": 0.7143,
+       "support": 7
+      }
+     ]
+    },
+    "detection": {
+     "volumes_with_lesion": 622,
+     "volumes_lesion_detected": 540,
+     "lesions": 648,
+     "lesions_detected": 554,
+     "small": 266,
+     "small_detected": 188,
+     "patients_with_gt": 78,
+     "patients_no_true_lesion_found": 2,
+     "false_tracks_per_volume": 4.55
+    },
+    "source": "outputs/predictions/pipeline_validation_gate/mri/cases"
+   },
+   "test": {
+    "n_patients": 104,
+    "n_lesion_patients": 104,
+    "counts": {
+     "correct": 52,
+     "wrong": 52,
+     "rejected": 0,
+     "no_region": 0,
+     "failed": 0
+    },
+    "strict_correct": 52,
+    "accuracy_ci95": [
+     0.4056,
+     0.5944
+    ],
+    "macro_f1_ci95": [
+     0.2725,
+     0.4853
+    ],
+    "classification": {
+     "n": 104,
+     "correct": 52,
+     "labelled": 104,
+     "accuracy_all": 0.5,
+     "accuracy_labelled": 0.5,
+     "macro_f1": 0.3849,
+     "balanced_accuracy": 0.3753,
+     "per_class": [
+      {
+       "code": "Hepatocellular_carcinoma",
+       "name": "HCC",
+       "precision": 0.4921,
+       "recall": 0.9394,
+       "f1": 0.6458,
+       "support": 33
+      },
+      {
+       "code": "Intrahepatic_cholangiocarcinoma",
+       "name": "ICC",
+       "precision": 0.4444,
+       "recall": 0.3333,
+       "f1": 0.381,
+       "support": 12
+      },
+      {
+       "code": "Hepatic_metastasis",
+       "name": "Di căn gan",
+       "precision": 0.6667,
+       "recall": 0.1818,
+       "f1": 0.2857,
+       "support": 11
+      },
+      {
+       "code": "Hepatic_hemangioma",
+       "name": "U máu gan",
+       "precision": 0.4706,
+       "recall": 0.5,
+       "f1": 0.4848,
+       "support": 16
+      },
+      {
+       "code": "Hepatic_cyst",
+       "name": "Nang gan",
+       "precision": 0.6667,
+       "recall": 0.1818,
+       "f1": 0.2857,
+       "support": 11
+      },
+      {
+       "code": "Hepatic_abscess",
+       "name": "Áp xe gan",
+       "precision": 1.0,
+       "recall": 0.0909,
+       "f1": 0.1667,
+       "support": 11
+      },
+      {
+       "code": "FOCAL_NODULAR_HYPERPLASIA",
+       "name": "FNH",
+       "precision": 0.5,
+       "recall": 0.4,
+       "f1": 0.4444,
+       "support": 10
+      }
+     ]
+    },
+    "oracle": {
+     "n": 104,
+     "correct": 52
+    },
+    "detection": {
+     "volumes_with_lesion": 828,
+     "volumes_lesion_detected": 729,
+     "lesions": 873,
+     "lesions_detected": 741,
+     "small": 334,
+     "small_detected": 231,
+     "patients_with_gt": 104,
+     "patients_no_true_lesion_found": 0,
+     "false_tracks_per_volume": 4.23
+    },
+    "source": "reports/final_test/metrics_test.json",
+    "groups": {
+     "benign_as_malignant": 24,
+     "malignant_as_benign": 5,
+     "group_correct": 75,
+     "n_benign": 48,
+     "n_malignant": 56,
+     "n": 104
+    }
+   },
+   "yolo": {
+    "model": "YOLO11n",
+    "imgsz": 512,
+    "best_epoch": 24,
+    "epochs_run": 44,
+    "precision": 0.7974,
+    "recall": 0.6596,
+    "map50": 0.7488,
+    "map50_95": 0.5037,
+    "conf": 0.12,
+    "conf_rule": "F2 lớn nhất trên Validation",
+    "n_val_slices": 7491,
+    "source": "outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/metrics_val.json"
+   },
+   "roi_classifier_val": {
+    "n_rois": 2575,
+    "accuracy": 0.4784,
+    "macro_f1": 0.4282,
+    "source": "outputs/runs/cls/mri_hybrid_gt_s42/eval_val/metrics_val.json",
+    "note": "Mức ROI, vùng cắt theo nhãn chuẩn (oracle)"
+   }
+  }
+ },
+ "modality_recognition": {
+  "threshold": 0.95,
+  "n_patients_valB": 72,
+  "valB": {
+   "clean": {
+    "n": 216,
+    "accuracy_without_threshold": 0.9954,
+    "accepted": 212,
+    "coverage": 0.9815,
+    "accepted_accuracy": 1.0,
+    "accepted_errors": 0,
+    "errors_ct_as_mri": 0,
+    "errors_mri_as_ct": 0
+   },
+   "degraded": {
+    "n": 216,
+    "accuracy_without_threshold": 0.9907,
+    "accepted": 208,
+    "coverage": 0.963,
+    "accepted_accuracy": 0.9952,
+    "accepted_errors": 1,
+    "errors_ct_as_mri": 1,
+    "errors_mri_as_ct": 0
+   },
+   "screenshot": {
+    "n": 141,
+    "accuracy_without_threshold": 0.9787,
+    "accepted": 131,
+    "coverage": 0.9291,
+    "accepted_accuracy": 0.9924,
+    "accepted_errors": 1,
+    "errors_ct_as_mri": 1,
+    "errors_mri_as_ct": 0
+   }
+  },
+  "valB_all": {
+   "n": 573,
+   "accuracy_without_threshold": 0.9895,
+   "accepted": 551,
+   "coverage": 0.9616,
+   "accepted_accuracy": 0.9964,
+   "accepted_errors": 2,
+   "errors_ct_as_mri": 2,
+   "errors_mri_as_ct": 0
+  },
+  "nifti_header_rule": {
+   "ct": {
+    "ct": 1197
+   },
+   "mri": {
+    "mri": 3152
+   }
+  },
+  "yolo_on_synthetic_screenshots": {
+   "ct": {
+    "n_lesion_slices": 200,
+    "detected": {
+     "original": 133,
+     "screenshot": 130,
+     "photo": 121
+    },
+    "refused": {
+     "screenshot": 2,
+     "photo": 15
+    }
+   },
+   "mri": {
+    "n_lesion_slices": 200,
+    "detected": {
+     "original": 147,
+     "screenshot": 141,
+     "photo": 112
+    },
+    "refused": {
+     "screenshot": 14,
+     "photo": 38
+    }
+   }
+  },
+  "source": "outputs/runs/modality/modality_cnn_s42/metrics.json"
+ }
+}

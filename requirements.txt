@@ -1,0 +1,27 @@
+# Local environment (Python 3.12, Windows, RTX 3050 4 GB).
+# PyTorch CUDA must be installed first from the PyTorch index, e.g.:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+numpy
+scipy
+pandas
+pyyaml
+tqdm
+nibabel
+imageio-ffmpeg==0.5.1   # MP4 (H.264) export of the 3D scan video (server/video.py)
+SimpleITK
+opencv-python
+scikit-learn
+matplotlib
+timm
+ultralytics
+grad-cam
+streamlit
+pytest
+nbformat
+
+# website (server/ FastAPI backend, scripts/98_website_e2e.py)
+fastapi==0.162.0
+uvicorn==0.54.0
+python-multipart==0.0.32
+playwright==1.64.1
+pydicom==3.0.1

@@ -1,0 +1,6 @@
+# Colab already ships torch/torchvision with CUDA, numpy, pandas, scikit-learn, matplotlib, opencv.
+nibabel
+timm
+ultralytics
+grad-cam
+pyyaml

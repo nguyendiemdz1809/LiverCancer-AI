@@ -1,0 +1,449 @@
+{
+ "created": "2026-10-26T22:08:55",
+ "purpose": "official Test evaluation, run once",
+ "git": {
+  "commit": "00eec07644eee78d3eb00d10fee34e1a9033a9a4",
+  "branch": "master",
+  "subject": "fix(GĐ5): read git output as UTF-8 in the final-test scripts"
+ },
+ "code_sha256": {
+  "configs/cls.yaml": "99b8e9dd0cc59f532fffad4304df8339ef7e92519cb27690f868cea74e6e9ad3",
+  "configs/paths.yaml": "3a9c26d5fcb48029f1e69230200405a7ae9572d9cba0976d6e4189a47e4d1d92",
+  "configs/roi.yaml": "316066cc1523eb3413b40875fedee779cd33557a585435ad2c64ebefc1d03b7a",
+  "configs/yolo_inference.yaml": "6dd4dd45c987e379154e26957ad00c11595ed78af98f507119616a2eaf66064d",
+  "scripts/00_check_env.py": "7f4cf3cfb7d17468a94fe9379533115d22ff7abf283f28c45ff569d17c841805",
+  "scripts/01_verify_datasets.py": "fa13cfea2cfa770f991f25b86a42f51784607e9a87e79b963d56cbb9839df77a",
+  "scripts/02_audit_samples.py": "f5777a1ec17608b6fe331c131839fa059e7ba6a6ba66bb18edd04245da47e414",
+  "scripts/03_audit_full.py": "679549e3881cc32ccb1d9883949e2be27b9c22b570b83fe2bacfe82ab53d45ae",
+  "scripts/04_build_audit_report.py": "674127183278151fac4ca5d52a9fcffd5b70e493acb51869c0e80fd9b3851d19",
+  "scripts/05_check_mri_bbox_mismatch.py": "7c4a39147c2d3c039ab701f4f33e69fbc71ebc0f2d25be7e61ea67b3fe935f4b",
+  "scripts/10_make_splits.py": "0e7dca1c31fd5694b649ded1b6c091ed7984dcb777fd1e91baee2032d9307401",
+  "scripts/20_build_yolo_pilot.py": "37cb326e904a58ce860995551edf09fb1b5ebf38a384baee62e6bb51ffb9d576",
+  "scripts/21_check_source_integrity.py": "08e124c1beb60ab8d9445e352c22857129553e25c59e92b785c37ea4c94eb7b4",
+  "scripts/30_qa_pilot.py": "7b6bd04558d7676c18cad6c18547cbf8b367d8663b7de5bdaec5f26f7659e9f4",
+  "scripts/40_pack_pilot.py": "cae85ba59c7053908dbbf178cca8c92df023e45c180ca5117c0afb59dd2b8052",
+  "scripts/41_make_colab_notebooks.py": "dbfd8c79963b702f96d2e2ddeef8a21df907f52f128c538804493f9c347386bd",
+  "scripts/42_verify_zip.py": "a713b61f10ccabb34146a0f6350aa0e9fce84e46c61a2919db69eb4c7bcbcdcc",
+  "scripts/50_analyze_yolo_run.py": "c836880211e0daa8580917f087285a9ed1726d126e9a2fa972123cf685d0dcfd",
+  "scripts/51_ct_fp_fn_breakdown.py": "4049126764b8d01a6e6ff2f40c03dc1dc156cea2db8820a87c42f7e81ddb78a4",
+  "scripts/52_series_level_detection.py": "50a04ffd41094938aa503c0481482a9f798a0a6eba7caf0b892428f99134ee37",
+  "scripts/53_threshold_sweep.py": "bc0b0051ff81e5386c06fc3530d1e1614d8c6a44da87843a100afcbdd80e7de5",
+  "scripts/54_yolo_ct_mri_comparison.py": "2be144cfa90d8a9d0460db1f8751141866fbb2560b0e30235502e4e5c5912a6c",
+  "scripts/60_yolo_inference_demo.py": "b07dc77fc006a1dd31aca0eaaf6e6353d9765c5b54da45e348223fe9ac1edb1a",
+  "scripts/61_yolo_predict_nifti.py": "5898a1439589b776d3e4b83415c504bce3b03372a7c50f22aa8e7326d51a68cc",
+  "scripts/71_eval_roi_val.py": "2509b702c898099e4cc12ee46216bfb8105416e6a9000fd72dba8523bf214f9c",
+  "scripts/80_build_cls_dataset.py": "0ed889cb90749fa58f61257ea96d2646d2d048fde43f28ef6e759325f9c08a58",
+  "scripts/81_train_classifier.py": "f12ddc96bc9edb689bab85702146f178fd7c87ee437c8f7b9c9884a02e55da04",
+  "scripts/82_eval_classifier.py": "595b15f7947c1654b01844cc01ea1a6ae888e3d1cef5c98b072dfff7095ac74a",
+  "scripts/83_make_cls_notebook.py": "2b32fc2f044ca1ccaeee0f235a5c0bf1424152d095135e6b2b3a4095e25cc1d9",
+  "scripts/84_verify_cls_zip.py": "56362c297da68b6ab755f525b40942ceaff3f9caf6f7f7d8f6bd21a441bf99cd",
+  "scripts/90_run_pipeline.py": "a7317987da92164e869639209d67f78bf349c1bae3bec73310d1cbf3b187b2e0",
+  "scripts/91_pipeline_val_demo.py": "5bbb5b45bc972de59cc3ff0fbd8a150d7e9734c41c7f2e990880759274366725",
+  "scripts/92_pipeline_validation.py": "9fafceacad9f4eb07cc5d5f98d0df52d8cf1a83e6b4ad6387e8ae70efb213557",
+  "scripts/93_limitations_analysis.py": "d0f667f45be896030c4a4f753f09b4c27217f7052fce67f4ee843bae68c56508",
+  "scripts/94_gate_comparison.py": "69524d502b91c11c0a17bfd80a60cad30f588c3f71df9c21de38399c33d23b24",
+  "scripts/95_final_test_lock.py": "51df15f33bf4d7d64e4c2103344cc326310fd6287becd1ff2beb69f1a96ff9f8",
+  "scripts/96_final_test.py": "7fad403996d54fd979e72895f5acffaf44b60201419498aba4571f844063a106",
+  "src/livercancer/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/classification/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/classification/data.py": "acea52bc990b5c114edf36a7f12c38370fe03cad353eb2adaefbf920042be780",
+  "src/livercancer/classification/evaluate.py": "fa6f996aeff5e76e6cd7969cf50fe92da271bca63f04a6c25626bdd9dd35e95a",
+  "src/livercancer/classification/inference.py": "4af0e7b930664a1d50fc34d70036f55dd2c3d27b7d9e22c20cbec01fb92c7ef4",
+  "src/livercancer/classification/metrics.py": "fa8a21971a02546d0920f625e679f1c4d5340e1e3b826bc76d01acfe35c087ec",
+  "src/livercancer/classification/models/__init__.py": "4dd2f4ed0734f1ec97791785425ef55f6aec383eb96b805bdbc808e91db01482",
+  "src/livercancer/classification/train.py": "761cd988300af0dc73b6511ee60fb59fd3da904c24a15fe4e1622cfa1ecd5905",
+  "src/livercancer/config.py": "521fb77acc7cbda2f7e58859fc6170aedb834e5defc879cee93c333e3db0e278",
+  "src/livercancer/data/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/data/nifti_io.py": "38f29e4e900d2a812831c02c260e2696ebf7347af3be391c5172416f86155848",
+  "src/livercancer/data/slices.py": "fa5f86db63ae6f49569ab097b04b02f089d5fe1775a04a49b75217aeb0d83ea8",
+  "src/livercancer/data/sources.py": "61f08e38f8944fe04420cc025aa108097c13c523db49344c041975531a9e36b0",
+  "src/livercancer/data/yolo_boxes.py": "c513a1783c663a538bdc28d6faedfd437300f32edb4f268e04c0a0b3cc8eebd1",
+  "src/livercancer/detection/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/detection/yolo_detector.py": "0ecc936b4eb9cb453d7ca8a5e4af3141d7f0d3251065f28e75e63716f1d8fedb",
+  "src/livercancer/evaluation/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/evaluation/matching.py": "e603853fe5db3b695a8e91d4fc294210aa024e3d1864818747d11a45d0678ef1",
+  "src/livercancer/evidence.py": "ba8f9099ebaf1b9a0a59e2cea66375355f45fc84cf3ae329fa87f1408a9532c2",
+  "src/livercancer/pipeline.py": "be92fdf2590da50975b3edd1e84b923646c01a90f231a31a9a931d8c4db422a4",
+  "src/livercancer/pipeline_viz.py": "f4f49f99b3d41324869f5a5b66d197f504ccb6608a9912ae6f041d7410cc292f",
+  "src/livercancer/roi/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/roi/boxes.py": "5e1a0f5dca28273ee59d4a48175eba75ab72308f4aa736853e6717a7cb17fb65",
+  "src/livercancer/roi/crop.py": "8475772a46ea848ad9c0439d386b4501701ac4e6bdb0deef5143f59ab6c4bc3b",
+  "src/livercancer/roi/pipeline.py": "32a907fed2d9481785aee530bdaf9ada36b78d924838f8dbac3d30ac670c76c5",
+  "src/livercancer/roi/render.py": "6528586497cc97b7fdd86a37eda0b7f44303d8f51b62be219ad5be94bd6ef433",
+  "src/livercancer/roi/tracking.py": "244089cb18602912a6c00db628dc9998526a570eb1aa30c82a09d3e82ac534dc",
+  "src/livercancer/utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "src/livercancer/xai/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ },
+ "splits": {
+  "ct_split.csv": "52ba0adf5262332bb037afacab46c35ca1f2221c47244e59b8b4e382e4bcbf69",
+  "mri_split.csv": "d64db1f82ed1d1e99d724258db21f4dbe4e97afd364ea06006bdd74cfa6f3baf",
+  "split_manifest.csv": "dd9f1fa1d6175d130dfc59a789226600cda37f486eaa7f1ff39970c20dc10dc1"
+ },
+ "n_test": {
+  "ct": 54,
+  "mri": 104
+ },
+ "test_classes": {
+  "ct": {
+   "CHCC": 13,
+   "CN": 12,
+   "HCC": 14,
+   "ICC": 15
+  },
+  "mri": {
+   "FOCAL_NODULAR_HYPERPLASIA": 10,
+   "Hepatic_metastasis": 11,
+   "Hepatocellular_carcinoma": 33,
+   "Hepatic_hemangioma": 16,
+   "Hepatic_cyst": 11,
+   "Hepatic_abscess": 11,
+   "Intrahepatic_cholangiocarcinoma": 12
+  }
+ },
+ "modalities": {
+  "ct": {
+   "yolo": {
+    "weights": "outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/weights/best.pt",
+    "sha256": "65c126f310d8b7751f67625d917252ff5b8984ff741795d2e92b496a831f5707",
+    "sha256_config": "65c126f310d8b7751f67625d917252ff5b8984ff741795d2e92b496a831f5707",
+    "conf": 0.12,
+    "imgsz": 512,
+    "iou": 0.7,
+    "max_det": 300,
+    "chosen_on": "outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/analysis/threshold_choice.json"
+   },
+   "tumor_zoom": {
+    "merge_iou": 0.5,
+    "merge_containment": 0.8,
+    "link_iou": 0.3,
+    "link_max_gap": 1,
+    "min_track_slices": 1,
+    "min_track_conf": 0.12,
+    "key_slices": 3,
+    "crop_size": 224,
+    "margin_frac": 0.15,
+    "min_margin_px": 8,
+    "context_scale": 2.5,
+    "context_min_px": 128
+   },
+   "classifier": {
+    "checkpoint": "outputs/runs/cls/ct_hybrid_gt_s42/best.pt",
+    "sha256": "291d3b7e50f838b1aa241644090e072ce6f941f222eb4d3b8d3b3e5ab6091a82",
+    "sha256_config": "291d3b7e50f838b1aa241644090e072ce6f941f222eb4d3b8d3b3e5ab6091a82",
+    "classes": [
+     "HCC",
+     "ICC",
+     "CHCC"
+    ],
+    "aggregation": "mean_prob",
+    "aggregation_chosen_on": "outputs/runs/cls/ct_hybrid_gt_s42/eval_val/metrics_val.json",
+    "slices_per_track": 5,
+    "slice_min_gap": 2,
+    "reliable": true
+   },
+   "evidence_gate": {
+    "enabled": true,
+    "kind": "n_volumes",
+    "conf_min": 0.4,
+    "k": 2,
+    "single_volume": {
+     "kind": "max_conf",
+     "conf_min": 0.35
+    },
+    "chosen_on": "Validation (scripts/93_limitations_analysis.py, scripts/94_gate_comparison.py)"
+   }
+  },
+  "mri": {
+   "yolo": {
+    "weights": "outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/weights/best.pt",
+    "sha256": "cc6fef44446514d598e6f4a862c78e0eb214d28f2f7a4dac82ce4b060b157377",
+    "sha256_config": "cc6fef44446514d598e6f4a862c78e0eb214d28f2f7a4dac82ce4b060b157377",
+    "conf": 0.12,
+    "imgsz": 512,
+    "iou": 0.7,
+    "max_det": 300,
+    "chosen_on": "outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/analysis/threshold_choice.json"
+   },
+   "tumor_zoom": {
+    "merge_iou": 0.5,
+    "merge_containment": 0.8,
+    "link_iou": 0.3,
+    "link_max_gap": 1,
+    "min_track_slices": 1,
+    "min_track_conf": 0.12,
+    "key_slices": 3,
+    "crop_size": 224,
+    "margin_frac": 0.15,
+    "min_margin_px": 8,
+    "context_scale": 2.5,
+    "context_min_px": 128
+   },
+   "classifier": {
+    "checkpoint": "outputs/runs/cls/mri_hybrid_gt_s42/best.pt",
+    "sha256": "77cc2d3cd19e9c6de9d7410bf9bbfa34b7c0fc6cac78f73805d10df37e8f9a84",
+    "sha256_config": "77cc2d3cd19e9c6de9d7410bf9bbfa34b7c0fc6cac78f73805d10df37e8f9a84",
+    "classes": [
+     "Hepatocellular_carcinoma",
+     "Intrahepatic_cholangiocarcinoma",
+     "Hepatic_metastasis",
+     "Hepatic_hemangioma",
+     "Hepatic_cyst",
+     "Hepatic_abscess",
+     "FOCAL_NODULAR_HYPERPLASIA"
+    ],
+    "aggregation": "conf_weighted",
+    "aggregation_chosen_on": "outputs/runs/cls/mri_hybrid_gt_s42/eval_val/metrics_val.json",
+    "slices_per_track": 5,
+    "slice_min_gap": 1,
+    "reliable": false
+   },
+   "evidence_gate": {
+    "enabled": false,
+    "kind": "n_volumes",
+    "conf_min": 0.4,
+    "k": 2,
+    "single_volume": {
+     "kind": "max_conf",
+     "conf_min": 0.35
+    },
+    "chosen_on": "Validation (scripts/93_limitations_analysis.py, scripts/94_gate_comparison.py)"
+   }
+  }
+ },
+ "checks": [
+  {
+   "code": "S1",
+   "ok": true,
+   "text": "CT: mỗi BN thuộc đúng một split (361 BN; Test 54)",
+   "detail": ""
+  },
+  {
+   "code": "S1",
+   "ok": true,
+   "text": "MRI: mỗi BN thuộc đúng một split (498 BN; Test 104)",
+   "detail": ""
+  },
+  {
+   "code": "S2",
+   "ok": true,
+   "text": "CT: nhãn trong split trùng `patient_data.csv`",
+   "detail": ""
+  },
+  {
+   "code": "S3",
+   "ok": true,
+   "text": "MRI: Val = 78 ID chính thức, không ID nào trong Test",
+   "detail": ""
+  },
+  {
+   "code": "S4",
+   "ok": true,
+   "text": "`tests/test_splits_no_leakage.py` pass",
+   "detail": "6 passed in 0.15s"
+  },
+  {
+   "code": "S5",
+   "ok": true,
+   "text": "split đóng băng (2026-10-19 12:25) trước mọi bộ dữ liệu huấn luyện (2026-10-19 13:30)",
+   "detail": ""
+  },
+  {
+   "code": "S6",
+   "ok": true,
+   "text": "2 bản sao `split_manifest.csv` trong data/processed trùng bản gốc",
+   "detail": ""
+  },
+  {
+   "code": "Y1",
+   "ok": true,
+   "text": "YOLO pilot CT: 307 BN, split ['train', 'val'], không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "Y1",
+   "ok": true,
+   "text": "YOLO full CT: 307 BN, split ['train', 'val'], không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "Y1",
+   "ok": true,
+   "text": "YOLO pilot MRI: 394 BN, split ['train', 'val'], không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "Y2",
+   "ok": true,
+   "text": "ZIP yolo_ct_pilot.zip: 307 BN Train/Val, 0 BN Test trong ảnh/nhãn/metadata, thư mục ['train', 'val'] (bảng split đầy đủ `yolo_ct/split_manifest.csv` trùng bản đóng băng)",
+   "detail": ""
+  },
+  {
+   "code": "Y2",
+   "ok": true,
+   "text": "ZIP yolo_ct_full.zip: 307 BN Train/Val, 0 BN Test trong ảnh/nhãn/metadata, thư mục ['train', 'val'] (bảng split đầy đủ `yolo_ct/split_manifest.csv` trùng bản đóng băng)",
+   "detail": ""
+  },
+  {
+   "code": "Y2",
+   "ok": true,
+   "text": "ZIP yolo_mri_pilot.zip: 394 BN Train/Val, 0 BN Test trong ảnh/nhãn/metadata, thư mục ['train', 'val'] (bảng split đầy đủ `yolo_mri/split_manifest.csv` trùng bản đóng băng)",
+   "detail": ""
+  },
+  {
+   "code": "Y3",
+   "ok": true,
+   "text": "YOLO CT run `yolo11n_e50_img512_baseline`: data `/content/yolo_ct/data_colab.yaml`, đánh giá trên split `val`",
+   "detail": ""
+  },
+  {
+   "code": "V1",
+   "ok": true,
+   "text": "YOLO CT conf 0.12 = argmax F2 trên Val (`threshold_choice.json`, 14627 lát Val)",
+   "detail": ""
+  },
+  {
+   "code": "Y3",
+   "ok": true,
+   "text": "YOLO MRI run `yolo11n_e50_img512_baseline`: data `/content/yolo_mri/data_colab.yaml`, đánh giá trên split `val`",
+   "detail": ""
+  },
+  {
+   "code": "V1",
+   "ok": true,
+   "text": "YOLO MRI conf 0.12 = argmax F2 trên Val (`threshold_choice.json`, 7491 lát Val)",
+   "detail": ""
+  },
+  {
+   "code": "C1",
+   "ok": true,
+   "text": "ROI CT manifest: 15055 ROI, split ['train', 'val'], không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "C2",
+   "ok": true,
+   "text": "ZIP cls_ct.zip: 0 BN Test, thư mục ['train', 'val']",
+   "detail": ""
+  },
+  {
+   "code": "C3",
+   "ok": true,
+   "text": "Hybrid CT `ct_hybrid_gt_s42`: huấn luyện 194 BN Train, chọn epoch trên 42 BN Val (khớp manifest)",
+   "detail": ""
+  },
+  {
+   "code": "C4",
+   "ok": true,
+   "text": "Hybrid CT: dự đoán dùng để chọn checkpoint chỉ trên 42 BN Val",
+   "detail": ""
+  },
+  {
+   "code": "V2",
+   "ok": true,
+   "text": "Cách gộp CT `mean_prob` chọn trên Val (`metrics_val.json`)",
+   "detail": ""
+  },
+  {
+   "code": "C1",
+   "ok": true,
+   "text": "ROI MRI manifest: 31254 ROI, split ['train', 'val'], không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "C2",
+   "ok": true,
+   "text": "ZIP cls_mri.zip: 0 BN Test, thư mục ['train', 'val']",
+   "detail": ""
+  },
+  {
+   "code": "C3",
+   "ok": true,
+   "text": "Hybrid MRI `mri_hybrid_gt_s42`: huấn luyện 316 BN Train, chọn epoch trên 78 BN Val (khớp manifest)",
+   "detail": ""
+  },
+  {
+   "code": "C4",
+   "ok": true,
+   "text": "Hybrid MRI: dự đoán dùng để chọn checkpoint chỉ trên 78 BN Val",
+   "detail": ""
+  },
+  {
+   "code": "V2",
+   "ok": true,
+   "text": "Cách gộp MRI `conf_weighted` chọn trên Val (`metrics_val.json`)",
+   "detail": ""
+  },
+  {
+   "code": "C5",
+   "ok": true,
+   "text": "ZIP code gửi lên Colab không chứa ID BN Test",
+   "detail": ""
+  },
+  {
+   "code": "V3",
+   "ok": true,
+   "text": "Cache `pipeline_validation/ct`: 54 BN = toàn bộ Val, không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "V3",
+   "ok": true,
+   "text": "Cache `pipeline_validation_gate/ct`: 54 BN = toàn bộ Val, không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "V4",
+   "ok": true,
+   "text": "Tumor Zoom: bộ lọc track chọn trên 54 BN Val (`roi_val/ct`)",
+   "detail": ""
+  },
+  {
+   "code": "V3",
+   "ok": true,
+   "text": "Cache `pipeline_validation/mri`: 78 BN = toàn bộ Val, không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "V3",
+   "ok": true,
+   "text": "Cache `pipeline_validation_gate/mri`: 78 BN = toàn bộ Val, không BN Test",
+   "detail": ""
+  },
+  {
+   "code": "V4",
+   "ok": true,
+   "text": "Tumor Zoom: bộ lọc track chọn trên 78 BN Val (`roi_val/mri`)",
+   "detail": ""
+  },
+  {
+   "code": "V5",
+   "ok": true,
+   "text": "Evidence Gate: chọn từ phân tích Val (`limitations.json`)",
+   "detail": ""
+  },
+  {
+   "code": "O1",
+   "ok": true,
+   "text": "Không có ID BN Test trong outputs/, reports/, data/processed/ (ngoài bản sao bảng split và 4 file audit GĐ1 tạo trước khi có split)",
+   "detail": ""
+  },
+  {
+   "code": "D0",
+   "ok": true,
+   "text": "Đọc được dấu vân tay 5388/5388 volume",
+   "detail": ""
+  },
+  {
+   "code": "D1",
+   "ok": true,
+   "text": "Không volume Test nào trùng nội dung voxel với volume Train/Val của BN khác",
+   "detail": ""
+  },
+  {
+   "code": "G1",
+   "ok": true,
+   "text": "Code và cấu hình đã commit (src, scripts, configs, tests sạch)",
+   "detail": ""
+  }
+ ]
+}

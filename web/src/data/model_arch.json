@@ -1,0 +1,834 @@
+{
+ "generated": "2026-11-08T09:08:04",
+ "source": "scripts/76_export_model_arch.py",
+ "yolo": {
+  "ct": {
+   "modality": "ct",
+   "weights": "outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/weights/best.pt",
+   "sha256": "65c126f310d8b7751f67625d917252ff5b8984ff741795d2e92b496a831f5707",
+   "imgsz": 512,
+   "nc": 1,
+   "scale": "n",
+   "n_blocks": 24,
+   "n_backbone": 11,
+   "n_hidden_blocks": 23,
+   "conv2d": 88,
+   "batchnorm": 81,
+   "params": 2604883,
+   "activation": "SiLU",
+   "output": [
+    5,
+    5376
+   ],
+   "blocks": [
+    {
+     "i": 0,
+     "type": "Conv",
+     "from": [
+      "ảnh"
+     ],
+     "part": "backbone",
+     "out": [
+      16,
+      256,
+      256
+     ],
+     "params": 464,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 1,
+     "type": "Conv",
+     "from": [
+      "0"
+     ],
+     "part": "backbone",
+     "out": [
+      32,
+      128,
+      128
+     ],
+     "params": 4672,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 2,
+     "type": "C3k2",
+     "from": [
+      "1"
+     ],
+     "part": "backbone",
+     "out": [
+      64,
+      128,
+      128
+     ],
+     "params": 6640,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 3,
+     "type": "Conv",
+     "from": [
+      "2"
+     ],
+     "part": "backbone",
+     "out": [
+      64,
+      64,
+      64
+     ],
+     "params": 36992,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 4,
+     "type": "C3k2",
+     "from": [
+      "3"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      64,
+      64
+     ],
+     "params": 26080,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 5,
+     "type": "Conv",
+     "from": [
+      "4"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 147712,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 6,
+     "type": "C3k2",
+     "from": [
+      "5"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 87040,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 7,
+     "type": "Conv",
+     "from": [
+      "6"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 295424,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 8,
+     "type": "C3k2",
+     "from": [
+      "7"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 346112,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 9,
+     "type": "SPPF",
+     "from": [
+      "8"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 164608,
+     "desc": "Gộp đặc trưng nhiều tỉ lệ (max-pooling 5×5 lặp 3 lần)"
+    },
+    {
+     "i": 10,
+     "type": "C2PSA",
+     "from": [
+      "9"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 249728,
+     "desc": "Khối có self-attention theo vị trí (attention)"
+    },
+    {
+     "i": 11,
+     "type": "Upsample",
+     "from": [
+      "10"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Phóng ảnh đặc trưng ×2 (neck)"
+    },
+    {
+     "i": 12,
+     "type": "Concat",
+     "from": [
+      "11",
+      "6"
+     ],
+     "part": "neck",
+     "out": [
+      384,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 13,
+     "type": "C3k2",
+     "from": [
+      "12"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 111296,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 14,
+     "type": "Upsample",
+     "from": [
+      "13"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      64,
+      64
+     ],
+     "params": 0,
+     "desc": "Phóng ảnh đặc trưng ×2 (neck)"
+    },
+    {
+     "i": 15,
+     "type": "Concat",
+     "from": [
+      "14",
+      "4"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      64,
+      64
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 16,
+     "type": "C3k2",
+     "from": [
+      "15"
+     ],
+     "part": "neck",
+     "out": [
+      64,
+      64,
+      64
+     ],
+     "params": 32096,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 17,
+     "type": "Conv",
+     "from": [
+      "16"
+     ],
+     "part": "neck",
+     "out": [
+      64,
+      32,
+      32
+     ],
+     "params": 36992,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 18,
+     "type": "Concat",
+     "from": [
+      "17",
+      "13"
+     ],
+     "part": "neck",
+     "out": [
+      192,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 19,
+     "type": "C3k2",
+     "from": [
+      "18"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 86720,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 20,
+     "type": "Conv",
+     "from": [
+      "19"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      16,
+      16
+     ],
+     "params": 147712,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 21,
+     "type": "Concat",
+     "from": [
+      "20",
+      "10"
+     ],
+     "part": "neck",
+     "out": [
+      384,
+      16,
+      16
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 22,
+     "type": "C3k2",
+     "from": [
+      "21"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 378880,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 23,
+     "type": "Detect",
+     "from": [
+      "16",
+      "19",
+      "22"
+     ],
+     "part": "head",
+     "out": [
+      5,
+      5376
+     ],
+     "params": 445715,
+     "desc": "Đầu ra: dự đoán hộp (DFL) + điểm tin cậy σ(z) trên 3 tỉ lệ"
+    }
+   ]
+  },
+  "mri": {
+   "modality": "mri",
+   "weights": "outputs/runs/yolo_mri/yolo11n_e50_img512_baseline/weights/best.pt",
+   "sha256": "cc6fef44446514d598e6f4a862c78e0eb214d28f2f7a4dac82ce4b060b157377",
+   "imgsz": 512,
+   "nc": 1,
+   "scale": "n",
+   "n_blocks": 24,
+   "n_backbone": 11,
+   "n_hidden_blocks": 23,
+   "conv2d": 88,
+   "batchnorm": 81,
+   "params": 2604883,
+   "activation": "SiLU",
+   "output": [
+    5,
+    5376
+   ],
+   "blocks": [
+    {
+     "i": 0,
+     "type": "Conv",
+     "from": [
+      "ảnh"
+     ],
+     "part": "backbone",
+     "out": [
+      16,
+      256,
+      256
+     ],
+     "params": 464,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 1,
+     "type": "Conv",
+     "from": [
+      "0"
+     ],
+     "part": "backbone",
+     "out": [
+      32,
+      128,
+      128
+     ],
+     "params": 4672,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 2,
+     "type": "C3k2",
+     "from": [
+      "1"
+     ],
+     "part": "backbone",
+     "out": [
+      64,
+      128,
+      128
+     ],
+     "params": 6640,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 3,
+     "type": "Conv",
+     "from": [
+      "2"
+     ],
+     "part": "backbone",
+     "out": [
+      64,
+      64,
+      64
+     ],
+     "params": 36992,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 4,
+     "type": "C3k2",
+     "from": [
+      "3"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      64,
+      64
+     ],
+     "params": 26080,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 5,
+     "type": "Conv",
+     "from": [
+      "4"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 147712,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 6,
+     "type": "C3k2",
+     "from": [
+      "5"
+     ],
+     "part": "backbone",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 87040,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 7,
+     "type": "Conv",
+     "from": [
+      "6"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 295424,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 8,
+     "type": "C3k2",
+     "from": [
+      "7"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 346112,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 9,
+     "type": "SPPF",
+     "from": [
+      "8"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 164608,
+     "desc": "Gộp đặc trưng nhiều tỉ lệ (max-pooling 5×5 lặp 3 lần)"
+    },
+    {
+     "i": 10,
+     "type": "C2PSA",
+     "from": [
+      "9"
+     ],
+     "part": "backbone",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 249728,
+     "desc": "Khối có self-attention theo vị trí (attention)"
+    },
+    {
+     "i": 11,
+     "type": "Upsample",
+     "from": [
+      "10"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Phóng ảnh đặc trưng ×2 (neck)"
+    },
+    {
+     "i": 12,
+     "type": "Concat",
+     "from": [
+      "11",
+      "6"
+     ],
+     "part": "neck",
+     "out": [
+      384,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 13,
+     "type": "C3k2",
+     "from": [
+      "12"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 111296,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 14,
+     "type": "Upsample",
+     "from": [
+      "13"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      64,
+      64
+     ],
+     "params": 0,
+     "desc": "Phóng ảnh đặc trưng ×2 (neck)"
+    },
+    {
+     "i": 15,
+     "type": "Concat",
+     "from": [
+      "14",
+      "4"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      64,
+      64
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 16,
+     "type": "C3k2",
+     "from": [
+      "15"
+     ],
+     "part": "neck",
+     "out": [
+      64,
+      64,
+      64
+     ],
+     "params": 32096,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 17,
+     "type": "Conv",
+     "from": [
+      "16"
+     ],
+     "part": "neck",
+     "out": [
+      64,
+      32,
+      32
+     ],
+     "params": 36992,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 18,
+     "type": "Concat",
+     "from": [
+      "17",
+      "13"
+     ],
+     "part": "neck",
+     "out": [
+      192,
+      32,
+      32
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 19,
+     "type": "C3k2",
+     "from": [
+      "18"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      32,
+      32
+     ],
+     "params": 86720,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 20,
+     "type": "Conv",
+     "from": [
+      "19"
+     ],
+     "part": "neck",
+     "out": [
+      128,
+      16,
+      16
+     ],
+     "params": 147712,
+     "desc": "Tích chập 3×3 bước 2 + BatchNorm + SiLU (giảm kích thước ảnh một nửa)"
+    },
+    {
+     "i": 21,
+     "type": "Concat",
+     "from": [
+      "20",
+      "10"
+     ],
+     "part": "neck",
+     "out": [
+      384,
+      16,
+      16
+     ],
+     "params": 0,
+     "desc": "Nối kênh đặc trưng từ hai nhánh (neck)"
+    },
+    {
+     "i": 22,
+     "type": "C3k2",
+     "from": [
+      "21"
+     ],
+     "part": "neck",
+     "out": [
+      256,
+      16,
+      16
+     ],
+     "params": 378880,
+     "desc": "Khối CSP gồm các bottleneck tích chập (trích đặc trưng)"
+    },
+    {
+     "i": 23,
+     "type": "Detect",
+     "from": [
+      "16",
+      "19",
+      "22"
+     ],
+     "part": "head",
+     "out": [
+      5,
+      5376
+     ],
+     "params": 445715,
+     "desc": "Đầu ra: dự đoán hộp (DFL) + điểm tin cậy σ(z) trên 3 tỉ lệ"
+    }
+   ]
+  }
+ },
+ "hybrid_ct": {
+  "checkpoint": "outputs/runs/cls/ct_hybrid_gt_s42/best.pt",
+  "sha256": "291d3b7e50f838b1aa241644090e072ce6f941f222eb4d3b8d3b3e5ab6091a82",
+  "model": "hybrid",
+  "fusion": "concat",
+  "fusion_dim": 256,
+  "dropout": 0.3,
+  "classes": [
+   "HCC",
+   "ICC",
+   "CHCC"
+  ],
+  "params": 39157181,
+  "fused_dim": 512,
+  "cnn": {
+   "name": "ResNet-18",
+   "input": "crop cục bộ 224×224",
+   "params": 11176512,
+   "feature": 512,
+   "conv2d": 20,
+   "activation": "ReLU"
+  },
+  "transformer": {
+   "name": "Swin-T",
+   "input": "crop ngữ cảnh 224×224",
+   "params": 27519354,
+   "feature": 768,
+   "patch": 4,
+   "embed_dim": 96,
+   "depths": [
+    2,
+    2,
+    6,
+    2
+   ],
+   "blocks": 12,
+   "heads": [
+    3,
+    6,
+    12,
+    24
+   ],
+   "window": 7,
+   "activation": "GELU"
+  },
+  "head": {
+   "params": 461315,
+   "layers": [
+    "Linear 512→256 + LayerNorm + GELU (chiếu nhánh CNN)",
+    "Linear 768→256 + LayerNorm + GELU (chiếu nhánh Transformer)",
+    "Nối (concat) → 512",
+    "Dropout 0.3 → Linear 512→256 → GELU",
+    "Dropout 0.3 → Linear 256→3 → softmax"
+   ]
+  }
+ }
+}
