@@ -225,5 +225,5 @@ Trang này đọc `web/src/data/research.json`. File được sinh tự động 
 cd web; npm run build
 ```
 
-Đưa website lên Internet: nhấp đúp `MO_WEBSITE_ONLINE.bat` (tắt: `TAT_WEBSITE_ONLINE.bat`) (giao diện https://livercancer-ai-demo-7u5.pages.dev + máy chủ AI qua Cloudflare Tunnel).
+Đưa website lên Internet: nhấp đúp `MO_WEBSITE_ONLINE.bat` (tắt: `TAT_WEBSITE_ONLINE.bat`) (giao diện https://livercancer-ai-demo.pages.dev + máy chủ AI qua Cloudflare Tunnel).
 Chi tiết: `docs/DEPLOY_CLOUDFLARE.md`.

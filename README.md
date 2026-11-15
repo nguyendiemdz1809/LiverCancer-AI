@@ -190,7 +190,7 @@ Trọng số **CT** (YOLO11n-CT + Hybrid CT, khoảng 160 MB) nằm ở mục **
    ```
 3. Chọn **Phân tích CT** rồi tải lên tệp NIfTI (`.nii.gz`), DICOM (thư mục hoặc `.zip`) hoặc ảnh PNG/JPG của một lát cắt.
 
-Bản trình diễn online của tác giả dùng Cloudflare Pages cho giao diện và Cloudflare Quick Tunnel tới máy chủ AI trên máy tác giả; cách làm được mô tả trong [docs/DEPLOY_CLOUDFLARE.md](docs/DEPLOY_CLOUDFLARE.md). Các tệp bật/tắt bản online gắn với tài khoản Cloudflare của tác giả nên không có trong repo; để chạy trên máy của bạn chỉ cần `run_website.ps1` như trên.
+Bản trình diễn online: **https://livercancer-ai-demo.pages.dev** (chỉ phân tích được khi máy chủ AI trên máy tác giả đang bật). Bản này dùng Cloudflare Pages cho giao diện và Cloudflare Quick Tunnel tới máy chủ AI trên máy tác giả; cách làm được mô tả trong [docs/DEPLOY_CLOUDFLARE.md](docs/DEPLOY_CLOUDFLARE.md). Các tệp bật/tắt bản online gắn với tài khoản Cloudflare của tác giả nên không có trong repo; để chạy trên máy của bạn chỉ cần `run_website.ps1` như trên.
 
 Chạy pipeline từ dòng lệnh, không cần website: `.venv\Scripts\python scripts\90_run_pipeline.py --help` (hướng dẫn trong [docs/PIPELINE_VSCODE.md](docs/PIPELINE_VSCODE.md)).
 

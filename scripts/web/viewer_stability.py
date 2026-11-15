@@ -76,7 +76,7 @@ def check(samples, phase, errors, expect_transform=None):
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--base", default="https://livercancer-ai-demo-7u5.pages.dev")
+    ap.add_argument("--base", default="https://livercancer-ai-demo.pages.dev")
     args = ap.parse_args()
     from playwright.sync_api import expect, sync_playwright
     paths = load_paths()

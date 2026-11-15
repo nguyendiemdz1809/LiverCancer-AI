@@ -6,7 +6,7 @@
 #   1. Máy chủ AI (FastAPI + PyTorch) trên máy này, chỉ nghe ở 127.0.0.1. Phân tích ảnh CÔNG KHAI (không mã, không đăng nhập),
 #      được bảo vệ bằng giới hạn theo IP, hàng đợi, kích thước tệp và thời gian xử lý (server/settings.py).
 #   2. Cloudflare Quick Tunnel -> https://<ngẫu-nhiên>.trycloudflare.com (TẠM THỜI, đổi sau mỗi lần bật / mỗi lần tunnel khởi động lại).
-#   3. Ghi địa chỉ tunnel vào runtime-config.json và đưa lại giao diện lên Cloudflare Pages: https://livercancer-ai-demo-7u5.pages.dev
+#   3. Ghi địa chỉ tunnel vào runtime-config.json và đưa lại giao diện lên Cloudflare Pages: https://livercancer-ai-demo.pages.dev
 #      tự nối tới máy chủ AI, không ai phải nhập địa chỉ máy chủ.
 #   4. Theo dõi mỗi phút (tự phục hồi, có giới hạn):
 #      - máy chủ AI dừng -> khởi động lại (tối đa 3 lần / giờ);

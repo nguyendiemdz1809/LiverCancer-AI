@@ -4,7 +4,7 @@
 
 | Thành phần | Địa chỉ | Cố định? |
 |---|---|---|
-| Giao diện (Cloudflare Pages) | **https://livercancer-ai-demo-7u5.pages.dev** | Có |
+| Giao diện (Cloudflare Pages) | **https://livercancer-ai-demo.pages.dev** | Có |
 | Máy chủ AI (Quick Tunnel tới máy này) | `https://<4-từ-ngẫu-nhiên>.trycloudflare.com` | **Không**, đổi mỗi lần bật |
 
 Người xem chỉ cần địa chỉ Pages. Mỗi lần bật demo, script tự ghi địa chỉ tunnel mới vào `runtime-config.json` trên Pages,
@@ -42,7 +42,7 @@ Tổng thời gian khoảng 1–2 phút.
   - Tunnel rớt (tiến trình chết, hoặc 3 lần liên tiếp không truy cập được): tự mở tunnel **mới** (địa chỉ mới) và cập nhật Pages, mất khoảng 1 phút, tối đa 6 lần mỗi lần bật.
   - Máy chủ AI dừng: website online tự tắt và gỡ địa chỉ khỏi Pages.
 - **Thanh trạng thái** dưới menu ở mọi trang cho biết máy chủ AI đang hoạt động, đang khởi động hay đang tắt.
-- Gửi giảng viên địa chỉ `https://livercancer-ai-demo-7u5.pages.dev/phan-tich`. **Không cần mã truy cập hay đăng nhập.**
+- Gửi giảng viên địa chỉ `https://livercancer-ai-demo.pages.dev/phan-tich`. **Không cần mã truy cập hay đăng nhập.**
 - **Chế độ có cửa sổ theo dõi:** `MO_DEMO_ONLINE.bat` làm cùng việc nhưng giữ cửa sổ mở để xem log trực tiếp; bấm Q để tắt.
   Tham số: `-NoBrowser`, `-NoPages` (chỉ dùng địa chỉ tunnel, tunnel cũng phục vụ đầy đủ website).
 - Trạng thái của lần bật hiện tại nằm ở `outputs\web_deploy\run\session.json`. Thư mục này không đưa lên Git.
@@ -111,9 +111,9 @@ Bản hiện tại có 7 tệp tĩnh, khoảng 0,3 MB.
 |---|---|
 | Máy chủ trên máy | Mở `http://127.0.0.1:8000/api/health`: `models.ct` và `models.mri` là `ready`, `locked_config` là `2e42271` |
 | Từ Internet | Chạy lại `MO_WEBSITE_ONLINE.bat` (in trạng thái), hoặc mở `https://<tunnel>.trycloudflare.com/api/health` |
-| Pages đang trỏ đi đâu | Mở `https://livercancer-ai-demo-7u5.pages.dev/runtime-config.json` |
+| Pages đang trỏ đi đâu | Mở `https://livercancer-ai-demo.pages.dev/runtime-config.json` |
 | Không có mã | Trang **Phân tích ảnh** mở ra là chọn CT/MRI và tải ảnh được ngay, không có ô mã truy cập |
-| Kiểm thử đầy đủ trên trình duyệt | `.venv\Scripts\python scripts\98_website_e2e.py --base https://livercancer-ai-demo-7u5.pages.dev` (chỉ dùng ca Validation) |
+| Kiểm thử đầy đủ trên trình duyệt | `.venv\Scripts\python scripts\98_website_e2e.py --base https://livercancer-ai-demo.pages.dev` (chỉ dùng ca Validation) |
 | Nhật ký | `outputs\web_deploy\run\controller.log` (các bước, tunnel tự mở lại), `server.log`, `tunnel.log`. Không chứa tên tệp hay ảnh; ghi đè mỗi lần chạy |
 
 ## 5. Bảo mật và giới hạn
@@ -125,7 +125,7 @@ Bản hiện tại có 7 tệp tĩnh, khoảng 0,3 MB.
   - Toàn máy chủ: 3 ca chờ, 6 lượt tải lên dở dang; GPU xử lý từng ca một.
   - Mỗi ca chạy tối đa 10 phút, quá thì dừng và báo lỗi.
   - Tệp: tối đa 300 MB/tệp, 8 tệp (DICOM 2000 tệp, tổng 1,5 GB), có giới hạn "bom giải nén". Định dạng được kiểm tra lại trên máy chủ.
-- **CORS** chỉ cho phép `https://livercancer-ai-demo-7u5.pages.dev` và các bản xem trước `https://<mã>.livercancer-ai-demo-7u5.pages.dev`.
+- **CORS** chỉ cho phép `https://livercancer-ai-demo.pages.dev` và các bản xem trước `https://<mã>.livercancer-ai-demo.pages.dev`.
 - **Không lưu ảnh:** tệp tải lên ghi vào thư mục tạm và bị xóa ngay sau khi đọc vào bộ nhớ. Kết quả chỉ nằm trong RAM 15 phút.
   Không ghi lại tên tệp gốc. Với DICOM, máy chủ không trả thông tin bệnh nhân.
 - **Không có trên Pages hay GitHub:** checkpoint `.pt`, dataset, ảnh bệnh nhân, `.env`, khóa bí mật, token Cloudflare (giao diện không chứa khóa nào).
@@ -149,15 +149,15 @@ Bản hiện tại có 7 tệp tĩnh, khoảng 0,3 MB.
 
 ## 7. Địa chỉ máy chủ AI cố định (Named Tunnel) – chưa triển khai
 
-Tài khoản Cloudflare dùng cho website: **`74ac12d2f4d87d2f159d80db714b73f9`** (`email tài khoản Cloudflare của chủ dự án`), project `livercancer-ai-demo`,
-địa chỉ `livercancer-ai-demo-7u5.pages.dev`, branch production `main`. Account ID được ghi trong `configs/web_deploy.json`.
+Tài khoản Cloudflare dùng cho website (từ 2026-11-15): **`f8f557ed629fe3feeafc4ab294765907`**, project `livercancer-ai-demo`,
+địa chỉ `livercancer-ai-demo.pages.dev`, branch production `main`. Account ID được ghi trong `configs/web_deploy.json`.
 `deploy_pages.ps1` ép Wrangler dùng đúng tài khoản này và **dừng** nếu đang đăng nhập tài khoản khác.
 
-Lý do có mục này: ngày 2026-10-30, Wrangler trên máy từng đăng nhập nhầm tài khoản `f8f557ed…` (một tài khoản cá nhân khác).
-8 deployment đầu tiên đã vào project trùng tên trong tài khoản đó, chiếm địa chỉ `livercancer-ai-demo.pages.dev`, nên project đúng nhận hậu tố `-7u5`.
-Project cũ chỉ còn giao diện, đã gỡ địa chỉ máy chủ AI; chưa xóa (xóa là quyết định của chủ tài khoản).
+Lịch sử: từ 2026-10-30 đến 2026-11-15 website chạy ở một tài khoản khác (`74ac12d2…`, địa chỉ `livercancer-ai-demo-7u5.pages.dev`).
+Ngày 2026-11-15, theo quyết định của chủ dự án, project đó đã bị xóa và website chuyển hẳn sang tài khoản hiện tại
+(dùng lại project trùng tên đã có sẵn ở đây, nên địa chỉ không còn hậu tố `-7u5`). Địa chỉ cũ không còn truy cập được.
 
-Kiểm tra qua API Cloudflare (chỉ đọc): cả hai tài khoản đều có **0 tên miền** và chưa có Named Tunnel.
+Kiểm tra qua API Cloudflare (chỉ đọc, 2026-10-30): các tài khoản đều có **0 tên miền** và chưa có Named Tunnel.
 Vì vậy hiện **không** tạo được URL backend cố định.
 
 Quick Tunnel đủ cho demo, vì Pages tự nhận địa chỉ mới. Named Tunnel cho địa chỉ AI cố định, ví dụ `https://api.<ten-mien>`.
