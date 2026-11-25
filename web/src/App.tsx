@@ -26,7 +26,8 @@ const LINKS = [
 
 const TITLES: Record<string, string> = {
   "/": "LiverCancer AI", "/phan-tich": "Phân tích ảnh · LiverCancer AI", "/mo-hinh": "Thông tin mô hình · LiverCancer AI",
-  "/ket-qua": "Kết quả nghiên cứu · LiverCancer AI", "/gioi-thieu": "Giới thiệu đề tài · LiverCancer AI",
+  "/ket-qua": "Kết quả nghiên cứu · LiverCancer AI",
+  "/gioi-thieu": "Giới thiệu đề tài · LiverCancer AI",
 };
 
 function NavIcon({ name }: { name: string }) {

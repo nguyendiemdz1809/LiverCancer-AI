@@ -13,6 +13,16 @@ Kết quả hiển thị trên một website tiếng Việt.
 
 ![Sơ đồ pipeline](docs/images/so_do_pipeline.png)
 
+### Chạy lại huấn luyện và đánh giá trên Google Colab (không cần cài đặt)
+
+[![Mở trên Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nguyendiemdz1809/LiverCancer-AI/blob/main/notebooks/06_tai_lap_huan_luyen_danh_gia_CT.ipynb)
+
+Notebook [`notebooks/06_tai_lap_huan_luyen_danh_gia_CT.ipynb`](notebooks/06_tai_lap_huan_luyen_danh_gia_CT.ipynb) chạy được với **bất kỳ tài khoản Gmail nào**:
+tự tải mã nguồn từ repo này, tải dữ liệu CT đã tiền xử lý (PLC-CECT, CC BY 4.0) và trọng số từ mục [Releases](https://github.com/nguyendiemdz1809/LiverCancer-AI/releases/tag/du-lieu-ct-v1), kiểm tra SHA256,
+rồi (A) huấn luyện và đánh giá YOLO11n, (B) huấn luyện và đánh giá bộ phân loại Hybrid, (C) đánh giá lại trọng số của đồ án
+để so với số liệu báo cáo. Chọn *Runtime → Change runtime type → T4 GPU*, rồi *Runtime → Run all*
+(`MODE = 'nhanh'` khoảng 30–45 phút; `MODE = 'day_du'` đúng cấu hình báo cáo, vài giờ).
+
 ---
 
 ## Mục lục
