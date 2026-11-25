@@ -4,9 +4,11 @@ lại quy trình huấn luyện và đánh giá của đồ án trên CT, không
 - Mã nguồn: git clone từ GitHub công khai (REPO_URL).
 - Dữ liệu đã tiền xử lý (PLC-CECT, CC BY 4.0) và trọng số đã huấn luyện: tải từ GitHub Releases của repo (tag du-lieu-ct-v1),
   kiểm tra SHA256 trước khi dùng. MRI (LLD-MMRI, CC BY-NC 4.0, cấm phân phối lại) KHÔNG được đưa vào.
-- Ba phần: (A) huấn luyện + đánh giá YOLO11n, (B) huấn luyện + đánh giá bộ phân loại Hybrid, (C) đánh giá lại trọng số
-  đã công bố để so với số liệu trong báo cáo. Chế độ 'nhanh' để kiểm tra quy trình, 'day_du' = đúng cấu hình báo cáo.
-- Chỉ đánh giá trên Validation. Tập Test không có trong dữ liệu chia sẻ (đã chạy một lần với cấu hình khóa).
+- Bốn phần: (A) huấn luyện + đánh giá YOLO11n, (B) huấn luyện + đánh giá bộ phân loại Hybrid, (C) đánh giá lại trọng số
+  đã công bố trên Val, (D) đánh giá lại trọng số đã khóa trên tập TEST (lát cắt + toàn bộ pipeline mức bệnh nhân) để so với
+  báo cáo. Chế độ 'nhanh' để kiểm tra quy trình, 'day_du' = đúng cấu hình báo cáo.
+- Phần D (người dùng quyết định 2026-11-25 theo yêu cầu GVHD): chỉ ĐÁNH GIÁ bằng cấu hình đã khóa (không huấn luyện, không
+  chọn ngưỡng/checkpoint trên Test); dữ liệu Test CT (ảnh NIfTI gốc, CC BY 4.0) đóng gói bởi scripts/102_pack_test_ct_release.py.
 
 Mọi ô code là Python thuần (không dùng lệnh '!'), nên có thể chạy thử trên máy tác giả:
   python scripts/101_make_reproduce_notebook.py --py-out <file.py>
@@ -29,6 +31,9 @@ FILES = {  # tên tệp -> (các phần trên GitHub Releases, SHA256 của tệ
     "cls_ct.zip": (["cls_ct.zip"], "2f2e52bac01186942ea688b42318a19c2097a3dc598e1a48a441c46e3bfb81d3"),
     "trong_so_CT_LiverCancerAI.zip": (["trong_so_CT_LiverCancerAI.zip"],
                                       "8d51f9f1b27d2d4ac8849c3d12e9af75caa42e2ffde5ccd4fe8cbcee02f4b820"),
+    # Test CT (scripts/102_pack_test_ct_release.py): ảnh NIfTI gốc + lát có tổn thương + kết quả từng BN của lần chạy chính thức
+    "test_ct.zip": ([f"test_ct.zip.part{i}" for i in range(1, 5)],
+                    "46f767cf99f776409521af9322ff0ddda5bf6e3f5811860bee9de8f11ef319cd"),
 }
 
 
@@ -61,17 +66,19 @@ từ mục **Releases** của repo GitHub và được kiểm tra SHA256 trướ
 | A | Huấn luyện **YOLO11n** phát hiện tổn thương (1 lớp «lesion»), đánh giá trên Val | P 0,688 · R 0,481 · mAP50 0,551 · mAP50-95 0,282 |
 | B | Huấn luyện bộ phân loại lai **Hybrid ResNet-18 + Swin-T** (HCC / ICC / CHCC), đánh giá trên Val | ROI: accuracy 0,862 · macro-F1 0,863 · AUC 0,942 |
 | C | Đánh giá lại **trọng số đã huấn luyện của đồ án** trên cùng tập Val | Phải ra đúng các số ở hai dòng trên |
+| D | Đánh giá **trọng số đã khóa** trên tập **Test** (54 bệnh nhân, chưa từng dùng để huấn luyện hay chọn mô hình): D1 YOLO11n trên lát cắt có tổn thương, D2 toàn bộ pipeline YOLO → Tumor Zoom → Hybrid → cổng bằng chứng trên ảnh CT 3D gốc | D1: P 0,598 · R 0,515 · mAP50 0,523 · D2: 38/42 BN ung thư đúng, macro-F1 0,927, nhóm chứng bị gán ung thư 2/12 |
 
 **Cách chạy:** *Runtime → Change runtime type → T4 GPU*, rồi *Runtime → Run all*.
 
 - `MODE = 'nhanh'` (mặc định): huấn luyện rút gọn (ít epoch, một phần dữ liệu) để kiểm tra toàn bộ quy trình chạy được,
-  khoảng **30–45 phút** gồm cả tải dữ liệu (khoảng 5 GB). Số liệu của phần A, B ở chế độ này **thấp hơn** báo cáo là bình thường;
-  phần C mới là phần so với báo cáo.
+  khoảng **1–1,5 giờ** gồm cả tải dữ liệu (khoảng 11 GB). Số liệu của phần A, B ở chế độ này **thấp hơn** báo cáo là bình thường;
+  phần C và D mới là phần so với báo cáo (không phụ thuộc `MODE`).
 - `MODE = 'day_du'`: đúng cấu hình trong báo cáo (YOLO tối đa 50 epoch, bộ phân loại tối đa 40 epoch), mất **vài giờ** trên T4.
   Nên đặt `LUU_VAO_DRIVE = True` để lưu checkpoint vào Drive **của chính bạn**: nếu Colab bị ngắt, chạy lại notebook sẽ tiếp tục.
 
-**Dữ liệu:** PLC-CECT (Luo và cộng sự, *Scientific Data* 2025, giấy phép **CC BY 4.0**), đã tiền xử lý thành ảnh 2D
-(chỉ tập Train và Validation). Tập **Test không được chia sẻ** vì đã được đánh giá đúng một lần với cấu hình khóa.
+**Dữ liệu:** PLC-CECT (Luo và cộng sự, *Scientific Data* 2025, giấy phép **CC BY 4.0**): Train và Validation đã tiền xử lý
+thành ảnh 2D; Test gồm **ảnh CT 3D gốc** (giữ nguyên từng byte) của 54 bệnh nhân và các lát có tổn thương.
+Tập Test chỉ dùng để **đánh giá** với cấu hình đã khóa từ trước (ngưỡng, checkpoint, cách gộp, cổng bằng chứng đều chọn trên Val).
 Dữ liệu MRI (LLD-MMRI, CC BY-NC 4.0) cấm phân phối lại nên không có trong notebook này (xem mục cuối).
 """),
     md("## 1. Kiểm tra GPU"),
@@ -99,7 +106,8 @@ Chỉ cần đổi `MODE` (và `LUU_VAO_DRIVE` nếu chạy đầy đủ). Khôn
 MODE = 'nhanh'                       # 'nhanh' (kiểm tra quy trình, ~30–45 phút) | 'day_du' (đúng cấu hình báo cáo, vài giờ)
 CHAY_PHAN_A_YOLO = True              # huấn luyện + đánh giá YOLO11n
 CHAY_PHAN_B_PHAN_LOAI = True         # huấn luyện + đánh giá bộ phân loại Hybrid
-CHAY_PHAN_C_TRONG_SO = True          # đánh giá trọng số đã công bố của đồ án
+CHAY_PHAN_C_TRONG_SO = True          # đánh giá trọng số đã công bố của đồ án trên Val
+CHAY_PHAN_D_TEST = True              # đánh giá trọng số đã khóa trên tập Test (tải thêm khoảng 6 GB ảnh CT gốc)
 LUU_VAO_DRIVE = False                # True: lưu kết quả huấn luyện vào Google Drive của chính bạn (nên dùng khi MODE='day_du')
 BATCH = 32                           # 32 vừa với GPU T4; giảm 16 nếu báo thiếu bộ nhớ
 
@@ -133,7 +141,7 @@ CODE = Path(os.environ.get('LCAI_LOCAL_REPO') or WORK / 'LiverCancer-AI')
 if not CODE.exists():
     run(['git', 'clone', '--depth', '1', REPO_URL, CODE])
 if not LOCAL_ZIPS:
-    run([sys.executable, '-m', 'pip', 'install', '-q', 'ultralytics==8.4.182', 'timm==1.0.30', 'nibabel', 'pyyaml'])
+    run([sys.executable, '-m', 'pip', 'install', '-q', 'ultralytics==8.4.182', 'timm==1.0.30', 'nibabel', 'pyyaml', 'scikit-learn'])
 sys.path.insert(0, str(CODE / 'src'))
 commit = subprocess.run(['git', '-C', str(CODE), 'rev-parse', '--short', 'HEAD'], capture_output=True, text=True).stdout.strip()
 import ultralytics
@@ -168,19 +176,25 @@ def tai_url(url, dst):
 def tai(name):
     info, dst = FILES[name], WORK / name
     if not dst.exists():
-        if LOCAL_ZIPS:
+        if LOCAL_ZIPS and (Path(LOCAL_ZIPS) / name).exists():
             shutil.copy(Path(LOCAL_ZIPS) / name, dst)
         else:
-            parts = [WORK / p for p in info['parts']]
-            for p in parts:
-                if not p.exists():
-                    tai_url(RELEASE_URL + p.name, p)
-            if parts != [dst]:                       # ghép các phần theo thứ tự thành tệp ZIP ban đầu
+            srcs = []                                # (đường dẫn phần, có xóa sau khi ghép không)
+            for p in info['parts']:
+                if LOCAL_ZIPS and (Path(LOCAL_ZIPS) / p).exists():
+                    srcs.append((Path(LOCAL_ZIPS) / p, False))
+                else:
+                    q = WORK / p
+                    if not q.exists():
+                        tai_url(RELEASE_URL + p, q)
+                    srcs.append((q, True))
+            if [s for s, _ in srcs] != [dst]:        # ghép các phần theo thứ tự thành tệp ZIP ban đầu
                 with open(dst, 'wb') as out:
-                    for p in parts:
+                    for p, xoa in srcs:
                         with open(p, 'rb') as f:
                             shutil.copyfileobj(f, out, 64 << 20)
-                        p.unlink()
+                        if xoa:
+                            p.unlink()
     h = sha256(dst)
     if h != info['sha256']:
         dst.unlink()
@@ -198,8 +212,13 @@ if CHAY_PHAN_A_YOLO or CHAY_PHAN_C_TRONG_SO:
     YOLO_DATA = giai_nen(tai('yolo_ct_full.zip'), WORK, 'yolo_ct/data.yaml') / 'yolo_ct'
 if CHAY_PHAN_B_PHAN_LOAI or CHAY_PHAN_C_TRONG_SO:
     CLS_DATA = giai_nen(tai('cls_ct.zip'), WORK, 'cls_ct/manifest.csv') / 'cls_ct'
-if CHAY_PHAN_C_TRONG_SO:
+if CHAY_PHAN_C_TRONG_SO or CHAY_PHAN_D_TEST:
     TRONG_SO = giai_nen(tai('trong_so_CT_LiverCancerAI.zip'), WORK / 'trong_so', 'outputs')
+    W_YOLO = TRONG_SO / 'outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/weights/best.pt'
+    W_CLS = TRONG_SO / 'outputs/runs/cls/ct_hybrid_gt_s42'
+if CHAY_PHAN_D_TEST:
+    TEST_DATA = giai_nen(tai('test_ct.zip'), WORK, 'test_ct/CECT/test_volumes.csv') / 'test_ct'
+    TEST_YOLO = TEST_DATA / 'yolo_ct'
 print('Xong.')
 """),
     md("""
@@ -207,6 +226,7 @@ print('Xong.')
 
 - Ảnh YOLO: mỗi ảnh có đúng một tệp nhãn, chỉ có tập Train và Val (không có Test), một lớp `lesion`.
 - Dữ liệu phân loại: không có bệnh nhân nào nằm ở cả Train và Val (chia tập theo bệnh nhân).
+- Tập Test: mọi bệnh nhân đều thuộc Test trong tệp chia tập đã đóng băng và không trùng với Train/Val.
 """),
     code("""
 import csv, yaml
@@ -235,6 +255,18 @@ if CHAY_PHAN_B_PHAN_LOAI or CHAY_PHAN_C_TRONG_SO:
     print('Phân loại: ROI theo (tập, nguồn, lớp):')
     for k, v in sorted(Counter((r['split'], r['source'], r['label']) for r in rows).items()):
         print('   ', k, v)
+
+if CHAY_PHAN_D_TEST:
+    split_ct = {r['patient_id']: r for r in csv.DictReader(open(CODE / 'data/splits/ct_split.csv', encoding='utf-8-sig'))}
+    vt = list(csv.DictReader(open(TEST_DATA / 'CECT/test_volumes.csv', encoding='utf-8')))
+    bn_test = {r['patient_id'] for r in vt}
+    assert all(split_ct[p]['split'] == 'test' for p in bn_test), 'Có BN không thuộc tập Test'
+    assert all((TEST_DATA / 'CECT' / r['ct_path']).exists() for r in vt), 'Thiếu ảnh CT 3D'
+    bn_train_val = {r['patient_id'] for r in rows} if (CHAY_PHAN_B_PHAN_LOAI or CHAY_PHAN_C_TRONG_SO) else set()
+    assert not (bn_test & bn_train_val), 'BN Test lẫn vào Train/Val'
+    print(f'Test: {len(vt)} volume CT 3D của {len(bn_test)} BN (ung thư + nhóm chứng CN);',
+          'nhãn:', dict(Counter(split_ct[p]['label'] for p in bn_test)))
+    print(f'Test lát có tổn thương: {len(list((TEST_YOLO / "images/test").glob("*.png"))):,} ảnh')
 """),
     md("""
 ## 6. Phần A: huấn luyện YOLO11n (phát hiện tổn thương)
@@ -286,9 +318,10 @@ if CHAY_PHAN_A_YOLO:
 `conf = 0,001` là ngưỡng chuẩn của Ultralytics để tính mAP (giống báo cáo). Precision và recall được lấy tại điểm F1 lớn nhất.
 """),
     code("""
-def danh_gia_yolo(weights, ten):
-    m = YOLO(str(weights)).val(data=str(DATA_YAML), split='val', conf=0.001, imgsz=512, batch=BATCH, device=0, workers=2,
-                               project=str(RUNS / 'yolo_ct'), name=f'val_{ten}', exist_ok=True, plots=True, verbose=False)
+def danh_gia_yolo(weights, ten, data=None, batch=None):
+    m = YOLO(str(weights)).val(data=str(data or DATA_YAML), split='val', conf=0.001, iou=0.7, imgsz=512, batch=batch or BATCH,
+                               device=0, workers=2, project=str(RUNS / 'yolo_ct'), name=f'val_{ten}', exist_ok=True, plots=True,
+                               verbose=False)
     r = {'precision': float(m.box.mp), 'recall': float(m.box.mr), 'mAP50': float(m.box.map50), 'mAP50-95': float(m.box.map)}
     print(ten, {k: round(v, 3) for k, v in r.items()})
     return r
@@ -362,17 +395,142 @@ tập Val. Kết quả phải trùng với báo cáo (có thể lệch ở chữ
 """),
     code("""
 if CHAY_PHAN_C_TRONG_SO:
-    w_yolo = TRONG_SO / 'outputs/runs/yolo_ct/yolo11n_e50_img512_baseline/weights/best.pt'
-    w_cls = TRONG_SO / 'outputs/runs/cls/ct_hybrid_gt_s42'
-    KET_QUA['C. YOLO11n của đồ án'] = danh_gia_yolo(w_yolo, 'trong_so_do_an')
-    KET_QUA['C. Hybrid của đồ án'] = danh_gia_phan_loai(w_cls, 'trong_so_do_an', out_subdir='eval_val_tai_lap')
+    KET_QUA['C. YOLO11n của đồ án'] = danh_gia_yolo(W_YOLO, 'trong_so_do_an')
+    KET_QUA['C. Hybrid của đồ án'] = danh_gia_phan_loai(W_CLS, 'trong_so_do_an', out_subdir='eval_val_tai_lap')
 """),
-    md("## 9. Tổng hợp và so sánh với báo cáo"),
+    md("""
+## 9. Phần D: đánh giá trên tập Test bằng cấu hình đã khóa
+
+Tập Test gồm **54 bệnh nhân** (42 ung thư: HCC / ICC / CHCC, và 12 bệnh nhân nhóm chứng CN), tách theo bệnh nhân ngay từ đầu,
+**không** dùng để huấn luyện hay chọn bất cứ thứ gì. Mọi tham số đã được chọn trên Val và khóa trước khi chạy Test
+(ngưỡng YOLO 0,12, checkpoint, cách gộp xác suất, cổng bằng chứng); phần này chỉ **chạy lại** đúng cấu hình đó.
+
+- **D1 – mức lát cắt:** YOLO11n trên 7.163 lát Test có tổn thương (chỉ lát có tổn thương, nên precision không so được với Val
+  vốn có cả lát âm tính).
+- **D2 – mức bệnh nhân (kết quả chính của báo cáo):** đưa toàn bộ ảnh CT 3D gốc của từng bệnh nhân qua pipeline thật
+  YOLO → Tumor Zoom → Hybrid → cổng bằng chứng. Pipeline **chỉ dùng hộp do YOLO tìm**; nhãn chuẩn chỉ dùng **sau** khi chạy
+  để chấm điểm. Bệnh nhân bị cổng từ chối hoặc không có vùng **không** được tính là đúng.
+"""),
+    code("""
+if CHAY_PHAN_D_TEST:
+    tcfg = yaml.safe_load((TEST_YOLO / 'data.yaml').read_text())
+    tcfg['path'] = str(TEST_YOLO)
+    TEST_YAML = TEST_YOLO / 'data_colab.yaml'
+    TEST_YAML.write_text(yaml.safe_dump(tcfg, sort_keys=False))
+    KET_QUA['D1. YOLO11n của đồ án – Test (lát có tổn thương)'] = danh_gia_yolo(W_YOLO, 'test_trong_so_do_an', data=TEST_YAML, batch=16)
+"""),
+    code("""
+import importlib.util
+import numpy as np
+from sklearn.metrics import roc_auc_score
+
+if CHAY_PHAN_D_TEST:
+    # trọng số đặt đúng chỗ mà cấu hình của pipeline trỏ tới (configs/yolo_inference.yaml, configs/cls.yaml; SHA256 được kiểm tra khi nạp)
+    shutil.copytree(TRONG_SO / 'outputs', CODE / 'outputs', dirs_exist_ok=True)
+    spec = importlib.util.spec_from_file_location('b96', CODE / 'scripts' / '96_final_test.py')
+    b96 = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(b96)                 # đúng mã đã dùng cho lần chạy Test chính thức (evaluate_case, chỉ số)
+    from livercancer.pipeline import LiverCancerPipeline
+    from livercancer.config import CONFIG_DIR, load_yaml
+
+    CLASSES = load_yaml(CONFIG_DIR / 'cls.yaml')['ct']['classes']
+    PATHS = {'ct': {'csv': str(TEST_DATA / 'CECT/test_volumes.csv'), 'data_dir': str(TEST_DATA / 'CECT')}}
+    allv = b96.rows(TEST_YOLO / 'volumes.csv')
+    vols = [v for v in allv if v['status'] == 'ok']
+    pats = sorted({v['patient_id'] for v in allv})
+    assert len(pats) == 54 and all(split_ct[p]['split'] == 'test' for p in pats)
+    gt_les, files = b96.b80.gt_lesions(TEST_YOLO, 'test')
+    pipe = LiverCancerPipeline('ct', 'auto', evidence_gate='config')
+    assert pipe.gate is not None and pipe.detector.conf == 0.12 and pipe.classifier.aggregation == 'mean_prob', 'cấu hình khác bản đã khóa'
+    print('Pipeline:', pipe.detector.device, '| YOLO conf', pipe.detector.conf, '| gộp', pipe.classifier.aggregation, '| cổng bằng chứng: bật')
+
+    CASES = RUNS / 'test_ct' / 'cases'
+    CASES.mkdir(parents=True, exist_ok=True)
+    t0 = time.time()
+    for i, pid in enumerate(pats):
+        cf = CASES / f'{pid}.json'
+        if cf.exists():
+            continue
+        series = [v['series'] for v in vols if v['patient_id'] == pid]
+        true = split_ct[pid]['label']
+        if not series:
+            case = {'patient_id': pid, 'true_label': true, 'status': 'no_usable_volume', 'pipeline_label': None}
+        else:
+            case, res = b96.evaluate_case(pipe, PATHS, 'ct', pid, series, true, gt_les,
+                                          b96.oracle_rois('ct', pid, series, gt_les, files), CLASSES)
+        cf.write_text(json.dumps(case, ensure_ascii=False, indent=1), encoding='utf-8')
+        print(f"[{i + 1:2d}/{len(pats)}] {pid}  nhãn thật {true:5s} -> {case['status']:22s} nhãn hệ thống {case.get('pipeline_label')}",
+              flush=True)
+    print(f'Pipeline trên Test: {(time.time() - t0) / 60:.1f} phút')
+"""),
+    md("""
+### Chỉ số Test mức bệnh nhân và so với báo cáo
+
+Tính bằng đúng các hàm của `scripts/96_final_test.py` (script đã tạo số liệu Test trong báo cáo).
+"""),
+    code("""
+import pandas as pd
+from IPython.display import Image, display
+
+if CHAY_PHAN_D_TEST:
+    cases = [json.loads(p.read_text(encoding='utf-8')) for p in sorted(CASES.glob('*.json'))]
+    lab = [c for c in cases if c['true_label'] in CLASSES]
+    ctrl = [c for c in cases if c['true_label'] not in CLASSES]
+    cnt = b96.counts(lab)
+    pm = b96.cls_metrics(lab, CLASSES)
+    om = b96.cls_metrics([c for c in lab if c.get('volumes')], CLASSES, 'oracle_label')
+    det = b96.detection([c for c in cases if c.get('volumes')])
+    may = [c['patient_id'] for c in lab if b96.outcome(c) == 'correct' and not any(t['matched'] for t in c.get('tracks', []))]
+    co_diem = [c for c in lab if c.get('pipeline_scores')]
+    y = np.array([CLASSES.index(c['true_label']) for c in co_diem])
+    p = np.array([[c['pipeline_scores'][k] for k in CLASSES] for c in co_diem])
+    auc = float(np.mean([roc_auc_score(y == i, p[:, i]) for i in range(len(CLASSES))]))
+    d2 = {'BN ung thư đúng': cnt['correct'], 'BN ung thư sai': cnt['wrong'], 'BN ung thư bị từ chối': cnt['rejected'],
+          'BN ung thư không có vùng': cnt['no_region'], 'Accuracy (trên 42 BN)': round(pm['accuracy_all'], 3),
+          'Macro-F1': round(pm['macro_f1'], 3), 'Đúng khi YOLO tìm thấy tổn thương thật': cnt['correct'] - len(may),
+          f'AUC macro ({len(co_diem)} BN có nhãn)': round(auc, 3), 'Oracle đúng (vùng theo nhãn chuẩn)': om['correct'],
+          'CN bị gán nhãn ung thư (/12)': sum(c['status'] == 'ok' for c in ctrl),
+          'CN bị từ chối': sum(c['status'] == 'insufficient_evidence' for c in ctrl),
+          'CN không có vùng': sum(c['status'] == 'no_lesion_detected' for c in ctrl),
+          'Tổn thương được phát hiện': f"{det['lesions_detected']}/{det['lesions']}",
+          'Tổn thương nhỏ (< 32×32 px) được phát hiện': f"{det['small_detected']}/{det['small']}"}
+    BAO_CAO_D2 = {'BN ung thư đúng': 38, 'BN ung thư sai': 2, 'BN ung thư bị từ chối': 2, 'BN ung thư không có vùng': 0,
+                  'Accuracy (trên 42 BN)': 0.905, 'Macro-F1': 0.927, 'Đúng khi YOLO tìm thấy tổn thương thật': 36,
+                  'AUC macro (40 BN có nhãn)': 0.991, 'Oracle đúng (vùng theo nhãn chuẩn)': 41, 'CN bị gán nhãn ung thư (/12)': 2,
+                  'CN bị từ chối': 8, 'CN không có vùng': 2, 'Tổn thương được phát hiện': '184/288',
+                  'Tổn thương nhỏ (< 32×32 px) được phát hiện': '11/71'}
+    bang_d2 = pd.DataFrame({'Báo cáo (Test chính thức 26/10/2026)': pd.Series(BAO_CAO_D2, dtype=object),
+                            'Chạy lại trong notebook': pd.Series(d2, dtype=object)})
+    bang_d2['Khớp'] = ['✓' if str(a) == str(b) else '✗' for a, b in zip(bang_d2.iloc[:, 0], bang_d2.iloc[:, 1])]
+    display(bang_d2)
+    KET_QUA['D2. Pipeline của đồ án – Test (mức BN)'] = {'BN ung thư đúng': cnt['correct'], 'Macro-F1 BN': pm['macro_f1'],
+                                                        'CN bị gán ung thư': d2['CN bị gán nhãn ung thư (/12)']}
+
+    # so từng bệnh nhân với kết quả của lần chạy Test chính thức
+    ref = {r['patient_id']: r for r in csv.DictReader(open(TEST_DATA / 'bao_cao_test_ct_patients.csv', encoding='utf-8'))}
+    khac = [(c['patient_id'], ref[c['patient_id']]['status'], ref[c['patient_id']]['pipeline_label'], c['status'], c.get('pipeline_label') or '')
+            for c in cases if (ref[c['patient_id']]['status'], ref[c['patient_id']]['pipeline_label']) != (c['status'], c.get('pipeline_label') or '')]
+    print(f'Từng bệnh nhân: {len(cases) - len(khac)}/{len(cases)} trùng với lần chạy Test chính thức (trạng thái và nhãn).')
+    for k in khac:
+        print('  khác:', k)
+
+    # ma trận nhầm lẫn mức bệnh nhân (hàng cuối = nhóm chứng CN)
+    cm = [list(r) for r in pm['confusion']]
+    cn_ok = [c for c in ctrl if c['status'] == 'ok']
+    cm.append([sum(1 for c in cn_ok if c['pipeline_label'] == k) for k in CLASSES] + [len(ctrl) - len(cn_ok)])
+    hinh = RUNS / 'test_ct' / 'cm_test_ct_pipeline.png'
+    b96.plot_cm(cm, CLASSES + ['CN (nhóm chứng)'], CLASSES + ['Từ chối / không có vùng'],
+                'TEST CT – pipeline (mức bệnh nhân, cấu hình đã khóa)', hinh)
+    display(Image(filename=str(hinh), width=560))
+"""),
+    md("## 10. Tổng hợp và so sánh với báo cáo"),
     code("""
 import pandas as pd
 BAO_CAO = {
     'Báo cáo: YOLO11n (Val)': {'precision': 0.688, 'recall': 0.481, 'mAP50': 0.551, 'mAP50-95': 0.282},
     'Báo cáo: Hybrid (Val)': {'ROI accuracy': 0.862, 'ROI macro-F1': 0.863, 'ROI AUC': 0.942, 'BN macro-F1 (vùng YOLO)': 0.902},
+    'Báo cáo: YOLO11n (Test, lát có tổn thương)': {'precision': 0.598, 'recall': 0.515, 'mAP50': 0.523, 'mAP50-95': 0.261},
+    'Báo cáo: Pipeline (Test, mức BN)': {'BN ung thư đúng': 38, 'Macro-F1 BN': 0.927, 'CN bị gán ung thư': 2},
 }
 bang = pd.DataFrame({**BAO_CAO, **KET_QUA}).T.round(3)
 display(bang)
@@ -385,15 +543,23 @@ if 'C. YOLO11n của đồ án' in KET_QUA:
 if 'C. Hybrid của đồ án' in KET_QUA:
     lech = abs(KET_QUA['C. Hybrid của đồ án']['ROI macro-F1'] - 0.863)
     print('Phần C – Hybrid macro-F1 lệch so với báo cáo:', round(lech, 4), '-> KHỚP' if lech < 0.005 else '-> KHÁC, cần kiểm tra')
+if 'D1. YOLO11n của đồ án – Test (lát có tổn thương)' in KET_QUA:
+    lech = abs(KET_QUA['D1. YOLO11n của đồ án – Test (lát có tổn thương)']['mAP50'] - 0.523)
+    print('Phần D1 – YOLO mAP50 trên Test lệch so với báo cáo:', round(lech, 4), '-> KHỚP' if lech < 0.005 else '-> KHÁC, cần kiểm tra')
+if 'D2. Pipeline của đồ án – Test (mức BN)' in KET_QUA:
+    d = KET_QUA['D2. Pipeline của đồ án – Test (mức BN)']
+    ok = d['BN ung thư đúng'] == 38 and abs(d['Macro-F1 BN'] - 0.927) < 0.005 and d['CN bị gán ung thư'] == 2
+    print('Phần D2 – pipeline trên Test:', f"{d['BN ung thư đúng']}/42 đúng, macro-F1 {d['Macro-F1 BN']:.3f}, CN gán ung thư {d['CN bị gán ung thư']}/12",
+          '-> KHỚP' if ok else '-> KHÁC (xem bảng ở phần D2)')
 """),
     md("""
 ## Ghi chú
 
-**Vì sao không có tập Test?** Theo quy trình của đồ án, mọi lựa chọn (checkpoint, ngưỡng, cách gộp, cổng bằng chứng) chỉ dựa
-trên Validation, sau đó cấu hình được khóa và tập Test được chạy **đúng một lần** (26/10/2026). Đánh giá Test cần ảnh NIfTI gốc
-của 54 bệnh nhân Test và toàn bộ pipeline (YOLO → Tumor Zoom → Hybrid → cổng bằng chứng):
-`scripts/95_final_test_lock.py` và `scripts/96_final_test.py` trong mã nguồn. Kết quả Test (38/42 bệnh nhân ung thư đúng,
-macro-F1 0,927) nằm trong báo cáo.
+**Về tập Test:** theo quy trình của đồ án, mọi lựa chọn (checkpoint, ngưỡng, cách gộp, cổng bằng chứng) chỉ dựa trên
+Validation; cấu hình được khóa (`scripts/95_final_test_lock.py`) rồi tập Test được chạy chính thức một lần ngày 26/10/2026
+(`scripts/96_final_test.py`). Phần D ở đây **chạy lại đúng cấu hình đã khóa** để người đọc tự kiểm chứng số liệu, không
+huấn luyện hay điều chỉnh gì theo Test. Ảnh CT 3D của Test là tệp gốc của PLC-CECT (CC BY 4.0), giữ nguyên từng byte.
+Khác GPU (T4 so với RTX 3050 của tác giả) có thể làm độ tin cậy của YOLO lệch rất nhỏ (fp16); ca nằm sát ngưỡng có thể đổi kết quả.
 
 **Tự tải dữ liệu gốc CT:** bộ PLC-CECT được công bố cùng bài báo Luo và cộng sự (*Scientific Data*, 2025). Từ dữ liệu gốc,
 các script `10_make_splits.py` và `40_pack_pilot.py --set full` tạo lại đúng bộ ảnh 2D dùng ở đây (SHA256 trong
