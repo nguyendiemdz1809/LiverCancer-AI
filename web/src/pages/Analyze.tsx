@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AnalysisResult, Dims, Health, JobState, Modality } from "../api";
-import { ApiError, analyzeUpload, confirmModality, deleteJob, deleteUpload, getHealth, getJob, uploadFiles } from "../api";
+import type { AnalysisResult, Detector, Dims, Health, JobState, Modality } from "../api";
+import { ApiError, DETECTOR_NAME, analyzeUpload, confirmModality, deleteJob, deleteUpload, getHealth, getJob, uploadFiles } from "../api";
 import ResultPanel from "../components/ResultPanel";
 import Viewer, { type ViewerState } from "../components/Viewer";
 
@@ -12,7 +12,7 @@ const STEPS: { key: string; label: string; d3?: boolean }[] = [
   { key: "format", label: "Đọc và kiểm tra tệp" },
   { key: "modality", label: "Kiểm tra loại ảnh CT / MRI" },
   { key: "extract", label: "Tách volume thành lát cắt 2D", d3: true },
-  { key: "detect", label: "YOLO phát hiện vùng nghi ngờ" },
+  { key: "detect", label: "Phát hiện vùng nghi ngờ" },
   { key: "zoom", label: "Tumor Zoom vùng nghi ngờ" },
   { key: "summary", label: "Tổng hợp kết quả" },
 ];
@@ -31,7 +31,7 @@ const P = {
   result: "M9 12l2 2 4-4M12 3a9 9 0 100 18 9 9 0 000-18z",
 };
 
-function Stepper({ stage, pct, detail, dims }: { stage: string; pct: number | null; detail: string; dims: Dims }) {
+function Stepper({ stage, pct, detail, dims, det }: { stage: string; pct: number | null; detail: string; dims: Dims; det: string }) {
   const steps = STEPS.filter((s) => !s.d3 || dims === "3d");
   const cur = Math.max(0, steps.findIndex((s) => s.key === stage));
   return (
@@ -40,7 +40,7 @@ function Stepper({ stage, pct, detail, dims }: { stage: string; pct: number | nu
         {steps.map((s, i) => (
           <li key={s.key} className={i < cur ? "done" : i === cur ? "now" : ""}>
             <span className="dot">{i < cur ? "✓" : i + 1}</span>
-            <span>{s.label}{i === cur && pct != null && (s.key === "upload" || s.key === "detect") ? ` · ${Math.round(pct)}%` : ""}</span>
+            <span>{s.label}{s.key === "detect" ? ` (${det})` : ""}{i === cur && pct != null && (s.key === "upload" || s.key === "detect") ? ` · ${Math.round(pct)}%` : ""}</span>
           </li>
         ))}
       </ol>
@@ -65,6 +65,8 @@ export default function Analyze() {
   const [mod, setMod] = useState<Modality | null>(null);
   const [need, setNeed] = useState<JobState["need"] | null>(null);
   const modRef = useRef<Modality | null>(null);
+  const [detector, setDetector] = useState<Detector>("yolo11n");
+  const detRef = useRef<Detector>("yolo11n");
   const dimsRef = useRef<Dims>("2d");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [vstate, setVstate] = useState<ViewerState | null>(null);
@@ -136,7 +138,7 @@ export default function Analyze() {
       const uid = await uploadFiles(fs, (p) => setPct(p));
       uploadRef.current = uid;
       setStage("format"); setPct(null);
-      const { job_id } = await analyzeUpload(uid, modRef.current ?? "auto", dimsRef.current);
+      const { job_id } = await analyzeUpload(uid, modRef.current ?? "auto", dimsRef.current, modRef.current === "ct" ? detRef.current : "yolo11n");
       uploadRef.current = null;
       jobRef.current = job_id;
       await follow(job_id);
@@ -154,7 +156,17 @@ export default function Analyze() {
   }, [follow]);
 
   const busy = phase === "busy" || phase === "confirm";
-  const chooseMod = (m: Modality) => { if (busy) return; if (phase !== "idle") reset(); setMod(m); modRef.current = m; };
+  const chooseMod = (m: Modality) => {
+    if (busy) return; if (phase !== "idle") reset(); setMod(m); modRef.current = m;
+    if (m === "mri") { setDetector("yolo11n"); detRef.current = "yolo11n"; }      // Faster R-CNN exists for CT only
+  };
+  const chooseDet = (d: Detector) => { if (busy) return; if (phase !== "idle") reset(); setDetector(d); detRef.current = d; };
+  // "So sánh": the same files (still in this page) uploaded again and analysed with the other detector.
+  const rerun = (d: Detector) => {
+    if (busy || !files.length) return;
+    const fs = files;
+    reset(); setFiles(fs); setDetector(d); detRef.current = d; start(fs);
+  };
   const chooseDims = (d: Dims) => { if (busy) return; if (phase !== "idle") reset(); setDims(d); dimsRef.current = d; clearInputs(); };
 
   const onFiles = useCallback((list: FileList | File[] | null) => {
@@ -212,7 +224,17 @@ export default function Analyze() {
                   <Svg d={P.mri} /> <span>MRI</span>
                 </button>
               </div>
-              <p className="small muted sc-note">{mod === "ct" ? "CT: YOLO CT → Tumor Zoom → Hybrid CT (HCC / ICC / CHCC) → Evidence Gate." : mod === "mri" ? "MRI: YOLO MRI → Tumor Zoom (không phân loại)." : "Chọn CT hoặc MRI trước khi tải ảnh."}</p>
+              {mod === "ct" && (
+                <div className="det2" role="radiogroup" aria-label="Chọn mô hình phát hiện">
+                  <button role="radio" aria-checked={detector === "yolo11n"} className={detector === "yolo11n" ? "on" : ""} disabled={busy} onClick={() => chooseDet("yolo11n")}>
+                    <b>YOLO11n</b><small>mô hình chính, có phân loại</small>
+                  </button>
+                  <button role="radio" aria-checked={detector === "frcnn"} className={detector === "frcnn" ? "on" : ""} disabled={busy || health?.comparison?.frcnn === "missing"} onClick={() => chooseDet("frcnn")}>
+                    <b>Faster R-CNN</b><small>đối chứng, chỉ khoanh vùng</small>
+                  </button>
+                </div>
+              )}
+              <p className="small muted sc-note">{mod === "ct" ? (detector === "frcnn" ? "CT: Faster R-CNN → Tumor Zoom (mô hình đối chứng, không phân loại; chậm hơn YOLO11n khoảng 7 lần)." : "CT: YOLO11n → Tumor Zoom → Hybrid CT (HCC / ICC / CHCC) → Evidence Gate.") : mod === "mri" ? "MRI: YOLO MRI → Tumor Zoom (không phân loại)." : "Chọn CT hoặc MRI trước khi tải ảnh."}</p>
             </section>
 
             <section className="card step-card">
@@ -249,7 +271,7 @@ export default function Analyze() {
               {phase === "idle" && <p className="small muted" style={{ margin: 0 }}>Hệ thống tự phân tích ngay sau khi tải ảnh lên, không cần bấm thêm nút.</p>}
               {phase === "busy" && (
                 <>
-                  <Stepper stage={stage} pct={pct} detail={detail} dims={dims} />
+                  <Stepper stage={stage} pct={pct} detail={detail} dims={dims} det={mod === "ct" ? DETECTOR_NAME[detector] : "YOLO11n"} />
                   <button className="btn btn-ghost small" style={{ marginTop: 12 }} onClick={reset}>Hủy phân tích</button>
                 </>
               )}
@@ -300,7 +322,7 @@ export default function Analyze() {
                 {busy ? (
                   <><span className="spinner light" aria-hidden="true" /><b>Đang phân tích…</b><span>Ảnh và vùng nghi ngờ sẽ hiển thị ngay khi AI chạy xong.</span></>
                 ) : (
-                  <><Svg d={P.image} size={44} /><b>Chưa có ảnh</b><span>Chọn loại phân tích, chọn CT hoặc MRI rồi tải ảnh lên. Trình xem sẽ hiển thị lát cắt, khung YOLO và Tumor Zoom.</span></>
+                  <><Svg d={P.image} size={44} /><b>Chưa có ảnh</b><span>Chọn loại phân tích, chọn CT hoặc MRI rồi tải ảnh lên. Trình xem sẽ hiển thị lát cắt, khung phát hiện và Tumor Zoom.</span></>
                 )}
               </div>
               </>
@@ -310,7 +332,7 @@ export default function Analyze() {
           {/* ---------------- right: results */}
           <aside className="ws-right">
             {phase === "done" && result ? (
-              <ResultPanel res={result} state={vstate} onReset={reset} jobId={jobRef.current} />
+              <ResultPanel res={result} state={vstate} onReset={reset} jobId={jobRef.current} onRerun={files.length ? rerun : undefined} />
             ) : (
               <section className="card rp rp-empty" aria-label="Kết quả phân tích">
                 <div className="rp-head"><h2>Kết quả phân tích</h2></div>

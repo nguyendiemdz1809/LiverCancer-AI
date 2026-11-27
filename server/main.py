@@ -7,7 +7,7 @@ Endpoints (all under /api):
     POST   /api/inspect           first bytes of each file -> CT / MRI recognition, validation (nothing stored)
     POST   /api/uploads           start a chunked upload (Cloudflare: <= 100 MB per request; CT files reach 160 MB)
     POST   /api/uploads/{id}/chunk?index=&offset=   raw bytes of one file part (<= 32 MB)
-    POST   /api/uploads/{id}/analyze                 modality (ct | mri | auto), dims (2d | 3d | "") -> job id
+    POST   /api/uploads/{id}/analyze                 modality (ct | mri | auto), dims (2d | 3d | ""), detector (yolo11n | frcnn) -> job id
     POST   /api/analyze           files + modality in one request (small uploads, tests)
     GET    /api/jobs/{id}         progress / Vietnamese result (state needs_confirm: the file says the other modality)
     POST   /api/jobs/{id}/confirm              modality ct | mri chosen after a contradiction
@@ -162,7 +162,7 @@ def health():
             "limits": {"max_file_mb": settings.max_file_mb, "max_files": settings.max_files, "max_dicom_files": MAX_DICOM_FILES,
                        "analysis_timeout_s": settings.job_timeout_s},
             "locked_config": commit, "modality_model": service.modality_model is not None,
-            "queue": jobs.waiting()}
+            "queue": jobs.waiting(), "comparison": {"frcnn": service.frcnn_state}}
 
 
 def _inspect(names: list[str], heads: list[bytes], sizes: list[int]):
@@ -203,8 +203,19 @@ def _check_dims(infos, dims: str) -> None:
         raise HTTPException(400, DIMS_3D_VI)
 
 
+DETECTOR_BAD_VI = "Mô hình phát hiện không hợp lệ."
+FRCNN_MRI_VI = "Faster R-CNN chỉ được huấn luyện cho ảnh CT. Với ảnh MRI, hãy chọn YOLO11n."
+
+
+def _check_detector(detector: str, modality: str) -> None:
+    if detector not in ("yolo11n", "frcnn"):
+        raise HTTPException(400, DETECTOR_BAD_VI)
+    if detector == "frcnn" and modality == "mri":
+        raise HTTPException(400, FRCNN_MRI_VI)
+
+
 def _submit(tmp: Path, paths: list[Path], orig_names: list[str], heads: list[bytes], sizes: list[int], modality: str,
-            client: str, dims: str = "") -> dict:
+            client: str, dims: str = "", detector: str = "yolo11n") -> dict:
     """Server-side validation of complete uploads (never trusts the browser), then queue the analysis."""
     infos, mod, reason = _inspect(orig_names, heads, sizes)
     bad = [i for i in infos if not i.ok]
@@ -224,7 +235,7 @@ def _submit(tmp: Path, paths: list[Path], orig_names: list[str], heads: list[byt
     names = display_names(infos, mod if mod in ("ct", "mri") else "unknown")
     job = jobs.submit([(n, p, i.kind) for n, p, i in zip(names, paths, infos)], tmp,
                       header_modality=mod if mod in ("ct", "mri") else None,
-                      requested=None if modality == "auto" else modality, client=client)
+                      requested=None if modality == "auto" else modality, client=client, detector=detector)
     return {"job_id": job.id, "files": [{"display_name": n, "n_slices": i.n_slices} for n, i in zip(names, infos)]}
 
 
@@ -234,9 +245,11 @@ def _ext(name: str) -> str:
 
 
 @app.post("/api/analyze")
-async def analyze(request: Request, files: list[UploadFile] = File(...), modality: str = Form("auto"), dims: str = Form("")):
+async def analyze(request: Request, files: list[UploadFile] = File(...), modality: str = Form("auto"), dims: str = Form(""),
+                  detector: str = Form("yolo11n")):
     if modality not in ("auto", "ct", "mri"):
         raise HTTPException(400, "Loại ảnh không hợp lệ.")
+    _check_detector(detector, modality)
     if not files or len(files) > settings.max_files:
         raise HTTPException(400, f"Hãy chọn từ 1 đến {settings.max_files} tệp ảnh của cùng một bệnh nhân.")
     client = _client_ip(request)
@@ -257,7 +270,7 @@ async def analyze(request: Request, files: list[UploadFile] = File(...), modalit
                 heads.append(fh.read(HEAD_BYTES))
             paths.append(p)
             sizes.append(n)
-        return _submit(tmp, paths, [f.filename or "" for f in files], heads, sizes, modality, client, dims)
+        return _submit(tmp, paths, [f.filename or "" for f in files], heads, sizes, modality, client, dims, detector)
     except BaseException:
         shutil.rmtree(tmp, ignore_errors=True)
         raise
@@ -333,9 +346,10 @@ async def upload_chunk(uid: str, request: Request, index: int, offset: int):
 
 
 @app.post("/api/uploads/{uid}/analyze")
-def upload_analyze(uid: str, request: Request, modality: str = Form("auto"), dims: str = Form("")):
+def upload_analyze(uid: str, request: Request, modality: str = Form("auto"), dims: str = Form(""), detector: str = Form("yolo11n")):
     if modality not in ("auto", "ct", "mri"):
         raise HTTPException(400, "Loại ảnh không hợp lệ.")
+    _check_detector(detector, modality)
     with uploads_lock:
         u = uploads.get(uid)
     if not u:
@@ -350,7 +364,7 @@ def upload_analyze(uid: str, request: Request, modality: str = Form("auto"), dim
         with open(p, "rb") as fh:
             heads.append(fh.read(HEAD_BYTES))
     try:
-        out = _submit(u["tmp"], paths, u["names"], heads, u["sizes"], modality, client, dims)
+        out = _submit(u["tmp"], paths, u["names"], heads, u["sizes"], modality, client, dims, detector)
     except HTTPException:
         with uploads_lock:
             uploads.pop(uid, None)

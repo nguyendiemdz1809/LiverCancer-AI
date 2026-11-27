@@ -2,7 +2,7 @@
 // No file name, no DICOM metadata, no original screenshot: only the pre-processed images that were analysed.
 // PDF: the same report printed by the browser ("In / Lưu PDF" -> Save as PDF).
 import type { AnalysisResult } from "./api";
-import { fmtNum, fmtPct } from "./api";
+import { detShort, fmtNum, fmtPct } from "./api";
 import type { ViewerState } from "./components/Viewer";
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
@@ -17,10 +17,11 @@ export function buildReport(res: AnalysisResult, st: ViewerState): string {
   const cs = res.case;
   const sel = st.sel;
   const now = new Date().toLocaleString("vi-VN");
+  const det = detShort(res);
   const where = res.is_2d ? "" : ` (${b.view.volume}, lát ${b.view.slice + 1})`;
   const imgs = [
     fig(`data:image/png;base64,${b.view.png}`, `Ảnh gốc${where}`),
-    fig(`data:image/png;base64,${res.annotated_png}`, `YOLO khoanh vùng${where}`),
+    fig(`data:image/png;base64,${res.annotated_png}`, `${det} khoanh vùng${where}`),
   ];
   if (sel) {
     imgs.push(fig(`data:image/png;base64,${sel.context_png}`, `Ảnh gốc (vùng cắt) – vùng ${sel.rank}${res.is_2d ? "" : `, lát đại diện ${sel.slice + 1}`}`));
@@ -36,13 +37,14 @@ export function buildReport(res: AnalysisResult, st: ViewerState): string {
         res.is_2d ? `${v.width} × ${v.height}` : `${v.width} × ${v.height} × ${v.n_slices}` + (v.spacing ? ` (${v.spacing.map((x) => (x == null ? "?" : vn(x, 2))).join(" × ")} mm)` : "")]);
     }
     if (cs.is_3d) {
-      rows.push(["Tổng số lát cắt", `${cs.total_slices} (YOLO 2D quét mọi lát${cs.duplicate_slices ? `; ${cs.duplicate_slices} lát trùng hoàn toàn dùng lại kết quả` : ""})`]);
+      rows.push(["Tổng số lát cắt", `${cs.total_slices} (${det} 2D quét mọi lát${cs.duplicate_slices ? `; ${cs.duplicate_slices} lát trùng hoàn toàn dùng lại kết quả` : ""})`]);
       rows.push(["Lát có vùng nghi ngờ", String(cs.slices_with_regions)]);
       if (cs.dicom_duplicate_files) rows.push(["Tệp DICOM trùng đã bỏ", String(cs.dicom_duplicate_files)]);
     }
   }
   rows.push([res.is_2d ? "Số vùng nghi ngờ" : "Số vùng nghi ngờ 3D", String(res.n_regions)]);
-  rows.push(["Độ tin cậy phát hiện cao nhất (YOLO)", b.max_conf != null ? fmtNum(b.max_conf) + (cs?.top_slice ? ` – ${cs.volumes.length > 1 ? cs.top_slice.volume + ", " : ""}lát ${cs.top_slice.k + 1}` : "") : "—"]);
+  rows.push(["Mô hình phát hiện", res.details.detector ? `${res.details.detector.name}${res.details.detector.main ? " (mô hình chính)" : " (mô hình đối chứng, chỉ khoanh vùng)"} · ngưỡng ${fmtNum(res.details.detector.conf)}` : "YOLO11n (mô hình chính)"]);
+  rows.push([`Độ tin cậy phát hiện cao nhất (${det})`, b.max_conf != null ? fmtNum(b.max_conf) + (cs?.top_slice ? ` – ${cs.volumes.length > 1 ? cs.top_slice.volume + ", " : ""}lát ${cs.top_slice.k + 1}` : "") : "—"]);
   if (res.details.evidence) rows.push(["Evidence Gate", `${res.details.evidence.passed ? "Đủ bằng chứng" : "Chưa đủ bằng chứng"} (${res.details.evidence.rule})`]);
   rows.push(["Thời gian phân tích", `${vn(res.timings_s.total ?? 0, 1)} giây trên ${res.device || "máy chủ"}`]);
   const scores = res.scores.length
@@ -54,12 +56,12 @@ export function buildReport(res: AnalysisResult, st: ViewerState): string {
   const regs3d = r3.length
     ? `<h2>Vùng nghi ngờ 3D (${r3.length})</h2><table><tr><td><b>Vùng</b></td><td><b>${cs && cs.volumes.length > 1 ? "Pha / chuỗi" : ""}</b></td><td><b>Lát</b></td><td><b>Đại diện</b></td><td><b>Số lát có khung</b></td><td><b>Độ tin cậy cao nhất</b></td><td><b>Khối bao</b></td></tr>${
       r3.slice(0, 60).map((r) => `<tr><td>Vùng ${r.num}</td><td>${cs && cs.volumes.length > 1 ? esc(r.volume) : ""}</td><td>${r.k_first + 1}–${r.k_last + 1}</td><td>${r.best_slice + 1}</td><td>${r.n_slices}</td><td>${fmtNum(r.max_conf)}</td><td>${r.size_mm ? r.size_mm.map((x) => vn(x, 0)).join(" × ") + " mm" : `${vn(r.bbox_vox.x_max - r.bbox_vox.x_min, 0)} × ${vn(r.bbox_vox.y_max - r.bbox_vox.y_min, 0)} px × ${r.k_last - r.k_first + 1} lát`}</td></tr>`).join("")}</table>
-      <p class="muted">Vùng 3D = các khung YOLO 2D trên những lát liên tiếp được nối theo quy tắc của pipeline đã khóa. Khối bao là bao của các khung 2D, không phải hình dạng hay thể tích khối u; một khối u có thể bị tách thành nhiều vùng. Video quét lát (MP4) được xuất riêng trên website.</p>`
+      <p class="muted">Vùng 3D = các khung ${det} 2D trên những lát liên tiếp được nối theo quy tắc của pipeline đã khóa. Khối bao là bao của các khung 2D, không phải hình dạng hay thể tích khối u; một khối u có thể bị tách thành nhiều vùng. Video quét lát (MP4) được xuất riêng trên website.</p>`
     : "";
   const sus = cs && cs.is_3d && cs.suspicious_slices.length
     ? `<h2>Lát cắt có vùng nghi ngờ (${cs.suspicious_slices.length})</h2><p class="muted">${cs.suspicious_slices.slice(0, 120).map((s) =>
       `${cs.volumes.length > 1 ? esc(s.volume) + " " : ""}lát ${s.k + 1} (${fmtNum(s.conf)})`).join(" · ")}${cs.suspicious_slices.length > 120 ? " · …" : ""}</p>
-      <p class="muted">Số trong ngoặc: độ tin cậy phát hiện cao nhất trên lát (YOLO), không phải xác suất ung thư.</p>`
+      <p class="muted">Số trong ngoặc: độ tin cậy phát hiện cao nhất trên lát (${det}), không phải xác suất ung thư.</p>`
     : "";
   return `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Báo cáo kết quả – LiverCancer AI</title>

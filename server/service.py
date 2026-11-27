@@ -86,6 +86,9 @@ def method_vi(info: dict) -> str:
 
 
 BRANCH_VI = {"ct": "YOLO CT", "mri": "YOLO MRI"}
+DETECTORS = ("yolo11n", "frcnn")                         # website choice; Faster R-CNN = CT comparison model (detection only)
+DETECTOR_VI = {"yolo11n": "YOLO11n", "frcnn": "Faster R-CNN"}
+FRCNN_CFG = CONFIG_DIR / "frcnn_inference.yaml"
 
 
 def _vn(x: float, d: int = 1) -> str:
@@ -148,6 +151,8 @@ class AnalysisService:
         self.ct: LiverCancerPipeline | None = None
         self.mri = None
         self.modality_model = None
+        self.frcnn = None                                  # loaded on first use (comparison model, CT only)
+        self.frcnn_state = "available" if self._frcnn_weights_exist() else "missing"
         self.state = {"ct": "loading", "mri": "loading"}
         self.errors: dict[str, str] = {}
         self.gpu_lock = threading.Lock()
@@ -229,6 +234,25 @@ class AnalysisService:
                     self.modality_model.probs([blank])
         except Exception:  # noqa: BLE001
             pass
+
+    @staticmethod
+    def _frcnn_weights_exist() -> bool:
+        try:
+            return (PROJECT_ROOT / load_yaml(FRCNN_CFG)["ct"]["weights"]).exists()
+        except Exception:  # noqa: BLE001
+            return False
+
+    def _get_frcnn(self):
+        """Faster R-CNN detector, loaded once on first request (166 MB, kept off the GPU until someone chooses it)."""
+        if self.frcnn is None:
+            from livercancer.detection.frcnn_detector import FrcnnDetector
+            try:
+                self.frcnn = FrcnnDetector.from_config(device=self.device, config=FRCNN_CFG)
+                self.frcnn_state = "ready"
+            except Exception as e:  # noqa: BLE001
+                self.frcnn_state, self.errors["frcnn"] = "error", str(e)
+                raise UserError("Không nạp được mô hình Faster R-CNN trên máy chủ. Hãy chọn YOLO11n.") from e
+        return self.frcnn
 
     @property
     def device_used(self) -> str:
@@ -422,11 +446,17 @@ class AnalysisService:
             cbs.append(cb)
         return cbs
 
-    def run_models(self, loaded: Loaded, modality: str, mod_info: dict, progress: Progress) -> tuple[dict, dict]:
-        """CT: YOLO CT -> Tumor Zoom -> Hybrid CT -> Evidence Gate (locked pipeline). MRI: YOLO MRI -> Tumor Zoom."""
+    def run_models(self, loaded: Loaded, modality: str, mod_info: dict, progress: Progress,
+                   detector: str = "yolo11n") -> tuple[dict, dict]:
+        """CT: YOLO CT -> Tumor Zoom -> Hybrid CT -> Evidence Gate (locked pipeline). MRI: YOLO MRI -> Tumor Zoom.
+        detector='frcnn' (CT only, chosen by the user to compare): Faster R-CNN -> Tumor Zoom, no classification."""
         t0 = time.perf_counter()
         is_2d = loaded.kind == "image"
-        if self.state.get(modality) != "ready":
+        if detector not in DETECTORS:
+            raise UserError("Mô hình phát hiện không hợp lệ.")
+        if detector == "frcnn" and modality != "ct":
+            raise UserError("Faster R-CNN chỉ được huấn luyện cho ảnh CT. Với ảnh MRI, hãy chọn YOLO11n.")
+        if detector == "yolo11n" and self.state.get(modality) != "ready":
             raise UserError("Mô hình " + modality.upper() + " chưa sẵn sàng trên máy chủ. Vui lòng thử lại sau ít phút.")
         vols, prep = self._inputs_for(loaded, modality)
         if not is_2d:
@@ -434,18 +464,27 @@ class AnalysisService:
             progress("extract", f"Đang tách {n} lát cắt 2D (axial) từ {len(vols)} volume"
                      + (" và kiểm tra lát trùng hoàn toàn" if self.dedup_exact else ""), None)
         cb = self._progress_callbacks(progress, [("", vols)], is_2d)[0]
-        det_real = self.ct.detector if modality == "ct" else self.mri
-        wrapped = _ProgressDetector(det_real, cb)
-        dd = DedupDetector(wrapped) if (self.dedup_exact and not is_2d) else None
         with self.gpu_lock:
-            res = self._run_ct(vols, is_2d, dd or wrapped) if modality == "ct" else self._run_detect(dd or wrapped, "mri", vols, is_2d)
+            if detector == "frcnn":
+                progress("detect", "Đang nạp mô hình Faster R-CNN", None)
+                det_real = self._get_frcnn()
+            else:
+                det_real = self.ct.detector if modality == "ct" else self.mri
+            wrapped = _ProgressDetector(det_real, cb)
+            dd = DedupDetector(wrapped) if (self.dedup_exact and not is_2d) else None
+            if detector == "frcnn":
+                res = self._run_detect(dd or wrapped, "ct", vols, is_2d)
+            else:
+                res = self._run_ct(vols, is_2d, dd or wrapped) if modality == "ct" else self._run_detect(dd or wrapped, "mri", vols, is_2d)
+        if detector == "frcnn" and res.message:
+            res.message = res.message.replace("YOLO ", "Faster R-CNN ", 1)
         progress("zoom", "Đang phóng to vùng nghi ngờ", None)
         progress("summary", "Đang tổng hợp kết quả", None)
-        out, viewer = self._result(res, modality, is_2d, mod_info, loaded, prep)
+        out, viewer = self._result(res, modality, is_2d, mod_info, loaded, prep, detector)
         out["case"] = self._case(res, loaded, dd.stats if dd else None, is_2d, prep)
         out["case"]["regions3d"] = [] if is_2d else self.regions_3d(res, loaded)
         # "strong region" threshold of the Evidence Gate rule that was applied (locked config; display only)
-        g = (self.ct.gate_single if len(vols) == 1 else self.ct.gate) if modality == "ct" and self.ct else None
+        g = (self.ct.gate_single if len(vols) == 1 else self.ct.gate) if modality == "ct" and self.ct and detector == "yolo11n" else None
         out["details"]["strong_conf"] = float(g.conf_min) if g is not None else None
         out["timings_s"] = {"total": round(time.perf_counter() - t0, 1)}
         return out, viewer
@@ -485,8 +524,10 @@ class AnalysisService:
         return out
 
     # ------------------------------------------------------------------ presentation
-    def limitations(self, modality: str) -> list[str]:
+    def limitations(self, modality: str, detector: str = "yolo11n") -> list[str]:
         """Detailed limits, shown under "Chi tiết nâng cao" (numbers from the official Test run)."""
+        if detector == "frcnn":
+            return self._frcnn_limitations()
         w = []
         s = self.facts.get("ct_small")
         if modality == "ct":
@@ -512,6 +553,23 @@ class AnalysisService:
                      "không đo kích thước khối u và có thể lớn hơn tổn thương nhiều lần ở một số ca.")
         w.append("Ảnh Tumor Zoom trên màn hình được cắt rộng hơn quanh tổn thương và phóng tối đa 4 lần (nội suy bicubic, "
                  "không làm nét, không tạo chi tiết); ảnh đưa vào mô hình phân loại vẫn là vùng cắt 224×224 như lúc huấn luyện.")
+        return w
+
+    @staticmethod
+    def _frcnn_limitations() -> list[str]:
+        w = ["Faster R-CNN là mô hình đối chứng của đồ án, chỉ huấn luyện cho CT. Mô hình chính của hệ thống là YOLO11n.",
+             "Với Faster R-CNN, hệ thống chỉ khoanh và phóng to vùng nghi ngờ, không phân loại thể ung thư và không áp dụng Evidence Gate, "
+             "vì bộ phân loại Hybrid và cổng bằng chứng được chọn và kiểm định theo đầu ra của YOLO11n."]
+        try:
+            v = json.loads((PROJECT_ROOT / "outputs/runs/comparison/frcnn_ct/eval/ct_val.json").read_text(encoding="utf-8"))
+            t = json.loads((PROJECT_ROOT / "outputs/runs/comparison/frcnn_ct/eval/ct_test.json").read_text(encoding="utf-8"))
+            w.append(f"Ngưỡng phát hiện {_vn(v['threshold_choice']['conf'], 2)} chọn trên Validation theo cùng quy tắc với YOLO11n. Trên tập Test (lát có tổn thương), "
+                     f"mAP50 của Faster R-CNN là {_vn(t['metrics']['mAP50'], 3)}, thấp hơn YOLO11n (0,523); recall tổn thương nhỏ chỉ "
+                     f"{_vn(t['operating_point_own']['small_recall'], 2)}.")
+        except Exception:  # noqa: BLE001
+            pass
+        w.append("Faster R-CNN chạy chậm hơn YOLO11n khoảng 7 lần (khoảng 61 so với 9 ms mỗi lát trên GPU RTX 3050).")
+        w.append("Tumor Zoom dùng cùng tham số nối vùng với YOLO11n (chọn trên Validation cho YOLO11n). Số vùng nghi ngờ không phải số khối u.")
         return w
 
     @staticmethod
@@ -650,7 +708,7 @@ class AnalysisService:
         classes = cfg["ct"]["classes"]
         return classes, dict(zip(classes, cfg["ct"]["class_names_vi"]))
 
-    def _branch(self, res: PipelineResult, key: str, is_2d: bool) -> tuple[dict, list[dict], np.ndarray]:
+    def _branch(self, res: PipelineResult, key: str, is_2d: bool, detector: str = "yolo11n") -> tuple[dict, list[dict], np.ndarray]:
         """Everything one model shows: slice view, regions with display zooms, chart, region table."""
         classes, nvi = self._cls_names()
         regions = sorted(res.regions, key=lambda r: -r["max_conf"])
@@ -674,23 +732,24 @@ class AnalysisService:
         vol0, k0 = self._top_slice(res, regions)
         view = self.slice_view(res.roi_results, vol0, k0, first_ids)
         annotated = self._annotate(res.roi_results[vol0].images[view["slice"]], view["boxes"], regions[0]["track_id"] if regions else None)
+        title = "Faster R-CNN CT" if detector == "frcnn" else BRANCH_VI[key]
         if res.status == "ok":
             chart = {"kind": "class_scores", "title": "Điểm dự đoán từng lớp (Hybrid CT)",
                      "items": [{"label": short(nvi[c]), "full": nvi[c], "value": round(float(res.scores[c]), 4)} for c in classes]}
         elif regions:
-            chart = {"kind": "detection", "title": f"Độ tin cậy phát hiện theo vùng ({BRANCH_VI[key]})",
+            chart = {"kind": "detection", "title": f"Độ tin cậy phát hiện theo vùng ({title})",
                      "items": [{"label": f"Vùng {i + 1}", "full": f"{r['volume']} · lát {r['best_slice'] + 1}" if not is_2d else r["volume"],
                                 "value": round(float(r["max_conf"]), 4)} for i, r in enumerate(regions[:MAX_REGIONS_SHOWN])]}
         else:
             chart = {"kind": "none", "title": "Biểu đồ phân tích", "items": []}
-        b = {"key": key, "title": BRANCH_VI[key], "status": res.status, "view": view, "regions": shown, "n_regions": len(regions),
+        b = {"key": key, "title": title, "detector": detector, "status": res.status, "view": view, "regions": shown, "n_regions": len(regions),
              "max_conf": round(float(regions[0]["max_conf"]), 4) if regions else None, "first_ids": first_ids, "chart": chart,
              "volumes": [{"name": v["name"], "n_slices": v["n_slices"]} for v in res.volumes],
              "all_regions": [{"volume": r["volume"], "slices": f"{r['k_first'] + 1}–{r['k_last'] + 1}", "confidence": round(float(r["max_conf"]), 4),
                               "label": short(nvi.get(r.get("label"), "")) if key == "ct" and r.get("label") else None} for r in regions]}
         return b, regions, annotated
 
-    def _commentary(self, res, modality, regions, nvi, is_2d, n_slices, n_vol, prep) -> list[str]:
+    def _commentary(self, res, modality, regions, nvi, is_2d, n_slices, n_vol, prep, detector: str = "yolo11n") -> list[str]:
         """Case-level comments. Wording: "vùng nghi ngờ" (never a confirmed tumour); detection confidence (YOLO) and the
         Hybrid CT score (research model, softmax) are named as such, never as a probability of cancer."""
         n = len(regions)
@@ -709,7 +768,7 @@ class AnalysisService:
             top = regions[0]
             loc = "" if is_2d else (f" (vùng ở lát {top['k_first'] + 1}–{top['k_last'] + 1}{'' if n_vol == 1 else ', ' + top['volume']};"
                                     f" lát đại diện {top['best_slice'] + 1})")
-            out.append(f"Hệ thống phát hiện {n} vùng nghi ngờ {where}. Độ tin cậy phát hiện (YOLO) cao nhất là "
+            out.append(f"Hệ thống phát hiện {n} vùng nghi ngờ {where}. Độ tin cậy phát hiện ({DETECTOR_VI[detector]}) cao nhất là "
                        f"{_vn(top['max_conf'], 2)}{loc}. Đây là vùng cần xem xét, chưa phải tổn thương đã được xác nhận.")
             if res.status == "ok":
                 sc = sorted(res.scores.items(), key=lambda x: -x[1])
@@ -721,6 +780,9 @@ class AnalysisService:
                 out.append(f"Bằng chứng hình ảnh chưa đủ để phân loại (độ tin cậy phát hiện cao nhất {_vn(ev.get('max_conf', 0), 2)}"
                            + (f", vùng đủ mạnh xuất hiện ở {ev.get('n_volumes_strong', 0)} pha" if n_vol > 1 else "")
                            + "), nên hệ thống không đưa ra nhãn.")
+            elif detector == "frcnn":
+                out.append("Faster R-CNN (mô hình đối chứng) chỉ phát hiện và định vị vùng nghi ngờ, không phân loại thể ung thư. "
+                           "Muốn có kết quả phân loại, hãy phân tích lại bằng YOLO11n (mô hình chính).")
             else:
                 out.append("Mô hình MRI chỉ phát hiện và định vị vùng nghi ngờ, không phân loại loại tổn thương.")
         if prep is not None:
@@ -738,9 +800,10 @@ class AnalysisService:
         return {"original_jpg": _thumb_b64(raw if raw.ndim == 3 else cv2.cvtColor(raw, cv2.COLOR_GRAY2BGR)),
                 "prepared_png": _png_b64(prep.gray), "steps": prep.steps_vi, "warnings": prep.warnings_vi}
 
-    def _result(self, res: PipelineResult, modality: str, is_2d: bool, mod_info: dict, loaded: Loaded, prep) -> tuple[dict, dict]:
+    def _result(self, res: PipelineResult, modality: str, is_2d: bool, mod_info: dict, loaded: Loaded, prep,
+                detector: str = "yolo11n") -> tuple[dict, dict]:
         classes, nvi = self._cls_names()
-        b, regions, annotated = self._branch(res, modality, is_2d)
+        b, regions, annotated = self._branch(res, modality, is_2d, detector)
         n_slices = sum(v["n_slices"] for v in res.volumes)
         ok = res.status == "ok"
         if ok:
@@ -755,15 +818,21 @@ class AnalysisService:
                            "sub": "ở ngưỡng phát hiện của mô hình; không đồng nghĩa với gan bình thường", "tone": "clear"}
             card_conf = {"value": "—", "sub": "không có vùng để đánh giá"}
         else:
-            card_result = {"title": f"Phát hiện {len(regions)} vùng nghi ngờ", "sub": "đã khoanh và phóng to (MRI không phân loại)", "tone": "info"}
-            card_conf = {"value": _vn(regions[0]["max_conf"], 2), "sub": "độ tin cậy phát hiện cao nhất (YOLO)"}
+            card_result = {"title": f"Phát hiện {len(regions)} vùng nghi ngờ",
+                           "sub": "đã khoanh và phóng to (Faster R-CNN không phân loại)" if detector == "frcnn" else "đã khoanh và phóng to (MRI không phân loại)",
+                           "tone": "info"}
+            card_conf = {"value": _vn(regions[0]["max_conf"], 2), "sub": f"độ tin cậy phát hiện cao nhất ({DETECTOR_VI[detector]})"}
         ev = res.evidence or {}
         mod_vi = "CT" if modality == "ct" else "MRI"
         notes = list(loaded.notes)
         if mod_info.get("method") == "user_override":
             notes.append(f"Bạn đã xác nhận phân tích như ảnh {mod_vi} dù {SOURCE_VI.get(mod_info.get('meta_source'), 'thông tin trong tệp')} "
                          f"ghi là {str(mod_info.get('meta')).upper()}; mô hình {mod_vi} chỉ được kiểm chứng trên ảnh {mod_vi}.")
-        details = {"limitations": self.limitations(modality),
+        details = {"limitations": self.limitations(modality, detector),
+                   "detector": {"key": detector, "name": DETECTOR_VI[detector],
+                                "conf": float(self.frcnn.conf if detector == "frcnn" and self.frcnn else
+                                              (self.ct.detector.conf if modality == "ct" and self.ct else self.mri.conf if self.mri else 0.12)),
+                                "main": detector == "yolo11n"},
                    "evidence": ({"passed": bool(ev.get("passed")), "rule": ev.get("rule", ""), "max_conf": round(float(ev.get("max_conf", 0)), 4),
                                  "n_volumes_strong": int(ev.get("n_volumes_strong", 0))} if ev else None),
                    "modality": {"value": mod_vi, "method": method_vi(mod_info), "confidence": mod_info.get("confidence")},
@@ -780,7 +849,7 @@ class AnalysisService:
             "label": res.label if ok else None, "label_name": nvi.get(res.label) if ok else None,
             "scores": [{"code": c, "name": short(nvi[c]), "full_name": nvi[c], "prob": round(float(res.scores[c]), 4)} for c in classes] if ok else [],
             "branches": [b], "n_regions": len(regions), "original": None,
-            "commentary": self._commentary(res, modality, regions, nvi, is_2d, n_slices, len(res.volumes), prep),
+            "commentary": self._commentary(res, modality, regions, nvi, is_2d, n_slices, len(res.volumes), prep, detector),
             "notes": notes, "footnote": FOOTNOTE, "details": details, "annotated_png": _png_b64(annotated),
             "device": self.device_used,
         }

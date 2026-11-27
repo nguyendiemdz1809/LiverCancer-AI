@@ -70,7 +70,7 @@ def _wait(client, jid):
     raise AssertionError("timeout")
 
 
-def _upload(client, items, modality="auto", chunk=32 << 20, dims=""):
+def _upload(client, items, modality="auto", chunk=32 << 20, dims="", detector=""):
     """[(name, bytes)] -> job state after a chunked upload (like the website)."""
     r = client.post("/api/uploads", json={"files": [{"name": n, "size": len(b)} for n, b in items]})
     assert r.status_code == 200, r.text
@@ -80,7 +80,8 @@ def _upload(client, items, modality="auto", chunk=32 << 20, dims=""):
             r = client.post(f"/api/uploads/{uid}/chunk?index={i}&offset={off}", content=b[off:off + chunk],
                             headers={"Content-Type": "application/octet-stream"})
             assert r.status_code == 200, r.text
-    r = client.post(f"/api/uploads/{uid}/analyze", data={"modality": modality, **({"dims": dims} if dims else {})})
+    r = client.post(f"/api/uploads/{uid}/analyze", data={"modality": modality, **({"dims": dims} if dims else {}),
+                                                         **({"detector": detector} if detector else {})})
     assert r.status_code == 200, r.text
     return _wait(client, r.json()["job_id"]), r.json()["job_id"]
 
@@ -155,6 +156,43 @@ def test_mri_detection_only(client):
     b = res["branches"][0]
     assert b["key"] == "mri" and b["regions"] and "label_short" not in b["regions"][0] and b["chart"]["kind"] == "detection"
     assert {v["name"] for v in b["volumes"]} == {"T2WI", "C+A"}
+
+
+def test_ct_faster_rcnn_detection_only(client):
+    """User-chosen comparison detector: Faster R-CNN -> Tumor Zoom, no classification, no Evidence Gate; regions equal a
+    direct FrcnnDetector + analyze_volume run on the same volume (threshold 0.28 chosen on Validation)."""
+    from livercancer.data.slices import load_volume_uint8
+    from livercancer.detection.frcnn_detector import FrcnnDetector
+    from livercancer.roi.pipeline import analyze_volume
+    pid, s = "P0267", _series("P0267")[0]
+    files = _files("ct", pid, [s])
+    j, jid = _upload(client, files, "ct", detector="frcnn")
+    assert j["state"] == "done", j
+    res = j["result"]
+    assert res["status"] in ("detection_only", "no_lesion_detected") and res["label"] is None and not res["scores"]
+    assert res["details"]["detector"] == {"key": "frcnn", "name": "Faster R-CNN", "conf": 0.28, "main": False}
+    assert res["details"]["strong_conf"] is None and res["details"]["evidence"] is None
+    b = res["branches"][0]
+    assert b["key"] == "ct" and b["title"] == "Faster R-CNN CT" and b["detector"] == "frcnn"
+    assert all(r["confidence"] >= 0.28 for r in b["regions"]) and "label_short" not in (b["regions"] or [{}])[0]
+    assert any("Faster R-CNN" in t for t in res["commentary"]) and any("đối chứng" in t for t in res["details"]["limitations"])
+    rr = analyze_volume(load_volume_uint8(_paths()("ct", pid, s)), FrcnnDetector.from_config())
+    assert res["n_regions"] == len(rr.tracks)
+    assert [round(t.max_conf, 2) for t in rr.tracks][:3] == [round(r["confidence"], 2) for r in b["regions"][:3]]
+    # default detector is still the locked YOLO11n pipeline
+    j2, _ = _upload(client, files, "ct")
+    assert j2["result"]["details"]["detector"]["key"] == "yolo11n" and j2["result"]["branches"][0]["title"] == "YOLO CT"
+
+
+def test_faster_rcnn_refusals(client):
+    r = client.post("/api/uploads", json={"files": [{"name": "a.nii.gz", "size": 10}]})
+    uid = r.json()["upload_id"]
+    r = client.post(f"/api/uploads/{uid}/analyze", data={"modality": "mri", "detector": "frcnn"})
+    assert r.status_code == 400 and "chỉ được huấn luyện cho ảnh CT" in r.json()["detail"]
+    r = client.post(f"/api/uploads/{uid}/analyze", data={"modality": "ct", "detector": "yolov8"})
+    assert r.status_code == 400
+    client.delete(f"/api/uploads/{uid}")
+    assert client.get("/api/health").json()["comparison"]["frcnn"] in ("available", "ready")
 
 
 def test_dicom_zip_identical_to_nifti_and_no_metadata(client):

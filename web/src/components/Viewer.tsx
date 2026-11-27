@@ -6,7 +6,7 @@
 // region numbers shared with the 3D view, the video, the report. Tab "Vùng nghi ngờ 3D": box of every region (Three.js).
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AnalysisResult, Branch, Region, Region3D, SliceView } from "../api";
-import { fmtNum, framesUrl, getSlice, thumbUrl } from "../api";
+import { detShort, fmtNum, framesUrl, getSlice, thumbUrl } from "../api";
 import VideoExport from "./VideoExport";
 import { CMAPS, CmapDefs, cmapFilter, cmapGradient } from "./colormaps";
 import type { CmapName } from "./colormaps";
@@ -74,14 +74,14 @@ function Boxes({ w, h, boxes, labels, selected, onPick }: {
   );
 }
 
-function ZoomPair({ sel, r3, isTwoD, onOpen }: {
-  sel: Region | null; r3: Region3D | null; isTwoD: boolean; onOpen: (src: string, title: string) => void;
+function ZoomPair({ sel, r3, isTwoD, onOpen, det = "YOLO" }: {
+  sel: Region | null; r3: Region3D | null; isTwoD: boolean; onOpen: (src: string, title: string) => void; det?: string;
 }) {
   if (!sel) {
     return (
       <div className="zoom-pair">
         <div className="zp empty"><span>{r3 ? `Vùng ${r3.num} không có ảnh Tumor Zoom` : "Không có vùng nghi ngờ cần phóng to"}</span></div>
-        <div className="zp empty"><span>{r3 ? "Tumor Zoom chỉ tạo cho 8 vùng có độ tin cậy phát hiện cao nhất" : "Tumor Zoom chỉ hiển thị khi YOLO phát hiện vùng nghi ngờ"}</span></div>
+        <div className="zp empty"><span>{r3 ? "Tumor Zoom chỉ tạo cho 8 vùng có độ tin cậy phát hiện cao nhất" : `Tumor Zoom chỉ hiển thị khi ${det} phát hiện vùng nghi ngờ`}</span></div>
       </div>
     );
   }
@@ -113,6 +113,7 @@ function ZoomPair({ sel, r3, isTwoD, onOpen }: {
 
 export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; jobId: string | null; onState?: (s: ViewerState) => void }) {
   const b = res.branches[0];
+  const det = detShort(res);
   const isTwoD = res.is_2d;
   const strong = res.details.strong_conf ?? null;
   const r3all = useMemo(() => res.case?.regions3d ?? [], [res.case]);
@@ -506,7 +507,7 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
         {multi && (
           <div className="frame-info small" aria-live="off">
             <b>Lát {shown.k + 1}/{sd.n}</b>
-            {shownBoxes.length === 0 ? <span className="muted"> · không có phát hiện YOLO trên lát này</span> : (
+            {shownBoxes.length === 0 ? <span className="muted"> · không có phát hiện {det} trên lát này</span> : (
               <> · {shownBoxes.length} phát hiện:{" "}
                 {[...shownBoxes].sort((a, c) => c.conf - a.conf).map((x, i) => (
                   <button key={i} className={`fi-chip${x.region === selId ? " on" : ""}`} onClick={() => selectRegion(x.region, false)}>
@@ -524,7 +525,7 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
           <div className="thumbs-block">
             <div className="thumbs-head">
               <b>Lát có vùng nghi ngờ{b.volumes.length > 1 ? ` · ${tvol}` : ""}</b>
-              <span className="muted small">{suspicious.length ? `${suspicious.length} lát · số = độ tin cậy phát hiện (YOLO)` : "không có"}</span>
+              <span className="muted small">{suspicious.length ? `${suspicious.length} lát · số = độ tin cậy phát hiện (${det})` : "không có"}</span>
               {suspicious.length > 1 && (
                 <span className="sortby small">Xếp theo:
                   <button className={sortBy === "k" ? "on" : ""} onClick={() => setSortBy("k")}>số lát</button>
@@ -551,7 +552,7 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
                 </div>
                 <button className="strip-nav" onClick={() => scrollStrip(1)} aria-label="Cuộn phải"><Icon d={I.next} /></button>
               </div>
-            ) : <p className="small muted" style={{ margin: 0 }}>YOLO không phát hiện vùng nghi ngờ nào trong {tvol}.</p>}
+            ) : <p className="small muted" style={{ margin: 0 }}>{det} không phát hiện vùng nghi ngờ nào trong {tvol}.</p>}
           </div>
         )}
 
@@ -570,7 +571,7 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
               </div>
             )}
           </div>
-          <ZoomPair sel={sel} r3={sel3d} isTwoD={isTwoD} onOpen={(src, title) => setBig({ src, title })} />
+          <ZoomPair sel={sel} r3={sel3d} isTwoD={isTwoD} det={det} onOpen={(src, title) => setBig({ src, title })} />
           {(sel || sel3d) && (
             <p className="small muted" style={{ margin: "8px 0 0" }}>
               {sel ? `Vùng ${sel.rank}` : `Vùng ${sel3d!.num}`}: độ tin cậy phát hiện cao nhất {fmtNum(sel ? sel.confidence : sel3d!.max_conf)}
@@ -650,7 +651,7 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
                 Đang chọn <b>Vùng {sel3d.num}</b> · lát {sel3d.k_first + 1}–{sel3d.k_last + 1} · mặt phẳng đang ở lát {target.k + 1}.{" "}
                 <button className="btn btn-ghost small" onClick={() => setTab("scan")}>Xem trên video quét lát</button>
               </p>
-              <ZoomPair sel={sel} r3={sel3d} isTwoD={false} onOpen={(src, title) => setBig({ src, title })} />
+              <ZoomPair sel={sel} r3={sel3d} isTwoD={false} det={det} onOpen={(src, title) => setBig({ src, title })} />
             </div>
           )}
         </div>

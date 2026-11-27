@@ -2,6 +2,9 @@
 
 export type Modality = "ct" | "mri";
 export type Dims = "2d" | "3d";
+// Detection model chosen on the website: YOLO11n = locked main pipeline; Faster R-CNN = CT comparison model (detection only).
+export type Detector = "yolo11n" | "frcnn";
+export const DETECTOR_NAME: Record<Detector, string> = { yolo11n: "YOLO11n", frcnn: "Faster R-CNN" };
 
 export interface Health {
   status: string;
@@ -11,6 +14,7 @@ export interface Health {
   modality_model?: boolean;
   locked_config: string;
   queue: number;
+  comparison?: { frcnn: "available" | "ready" | "missing" | "error" };
 }
 
 export interface FileCheck {
@@ -63,6 +67,7 @@ export interface Chart { kind: "class_scores" | "detection" | "none"; title: str
 export interface Branch {
   key: Modality;
   title: string;
+  detector?: Detector;
   status: string;
   view: SliceView;
   regions: Region[];
@@ -115,6 +120,7 @@ export interface AnalysisResult {
     limitations: string[];
     evidence: { passed: boolean; rule: string; max_conf: number; n_volumes_strong: number } | null;
     strong_conf?: number | null;     // CT: confidence of a "strong" region in the applied Evidence Gate rule
+    detector?: { key: Detector; name: string; conf: number; main: boolean };
     modality: { value: string; method: string; confidence: number | null };
     volumes: { name: string; n_slices: number; n_regions: number }[];
     device: string;
@@ -261,10 +267,11 @@ export async function uploadFiles(files: File[], onProgress: (pct: number) => vo
   return init.upload_id;
 }
 
-export function analyzeUpload(uploadId: string, modality: Modality | "auto", dims?: Dims) {
+export function analyzeUpload(uploadId: string, modality: Modality | "auto", dims?: Dims, detector: Detector = "yolo11n") {
   const fd = new FormData();
   fd.append("modality", modality);
   if (dims) fd.append("dims", dims);
+  fd.append("detector", detector);
   return call<{ job_id: string; modality: Modality }>(`/api/uploads/${uploadId}/analyze`, { method: "POST", body: fd });
 }
 
@@ -298,6 +305,9 @@ export async function fetchVideo(vid: string): Promise<Blob> {
 }
 
 export const deleteJob = (id: string) => call<{ deleted: boolean }>(`/api/jobs/${id}`, { method: "DELETE" }).catch(() => undefined);
+
+// Short name of the detector that produced a result ("YOLO" for the main pipeline, as everywhere on the site).
+export const detShort = (res: AnalysisResult) => (res.details.detector?.key === "frcnn" ? "Faster R-CNN" : "YOLO");
 
 export const fmtPct = (x: number, d = 1) => `${(100 * x).toLocaleString("vi-VN", { minimumFractionDigits: d, maximumFractionDigits: d })}%`;
 export const fmtNum = (x: number, d = 2) => x.toLocaleString("vi-VN", { minimumFractionDigits: d, maximumFractionDigits: d });

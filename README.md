@@ -67,20 +67,21 @@ Chi tiết: [reports/final_test/bao_cao_test.md](reports/final_test/bao_cao_test
 
 Phân loại MRI 7 lớp **chưa đạt** (Test 52/104 = 50,0%). Vì vậy website chỉ dùng MRI cho phát hiện và Tumor Zoom, không đưa nhãn MRI.
 
-### Thí nghiệm đối chứng YOLO11n và YOLOv5n
+### Thí nghiệm đối chứng YOLO11n và Faster R-CNN (CT)
 
-Cùng dữ liệu, siêu tham số, hạt giống và mã đánh giá. Chi tiết trong [reports/yolov5n_vs_yolo11n_comparison.md](reports/yolov5n_vs_yolo11n_comparison.md).
+So với Faster R-CNN ResNet-50 FPN, bộ phát hiện hai giai đoạn khác họ YOLO: cùng dữ liệu, cùng tiêu chí chọn checkpoint và ngưỡng trên Validation, cùng thuật toán tính mAP; Test chạy một lần. Chi tiết trong [reports/frcnn_vs_yolo11n_comparison.md](reports/frcnn_vs_yolo11n_comparison.md).
 
-| Test, mAP50 | YOLO11n (mô hình chính) | YOLOv5n |
+| CT | YOLO11n (mô hình chính) | Faster R-CNN |
 |---|---|---|
-| CT | 0,523 | 0,589 |
-| MRI | **0,776** | 0,757 |
+| Test, mAP50 | **0,523** | 0,456 |
+| Test, mAP50-95 | **0,261** | 0,205 |
+| Tham số | **2,6 triệu** | 41,3 triệu |
+| Tốc độ (RTX 3050, ms/ảnh) | **8,8** | 61,3 |
 
-- YOLO11n ít phép tính hơn khoảng 15% (4,19 so với 4,95 GFLOPs).
-- YOLOv5n chạy nhanh hơn khoảng 13–16% trên GPU laptop khi xử lý từng ảnh.
-- YOLO11n được giữ làm mô hình chính vì toàn bộ pipeline đã được kiểm định với nó.
+- Faster R-CNN dừng sớm ở epoch 8/12, một hạt giống, chưa tinh chỉnh riêng: đây là so sánh theo công thức huấn luyện chuẩn của mỗi mô hình.
+- Tổn thương nhỏ vẫn là điểm yếu chung của cả hai.
 
-![So sánh trên Test](docs/images/yolo11n_vs_yolov5n_test.png)
+![So sánh YOLO11n và Faster R-CNN](docs/images/yolo11n_vs_faster_rcnn.png)
 
 ---
 
@@ -143,8 +144,8 @@ LiverCancer_AI/
 ├── configs/                    # đường dẫn dữ liệu, cấu hình YOLO, Tumor Zoom, bộ phân loại (kèm SHA256 trọng số)
 ├── data/                       # split theo bệnh nhân (đóng băng), danh sách cách ly; data/processed/ do script sinh ra
 ├── docs/                       # kế hoạch từng giai đoạn, hướng dẫn chạy, website, triển khai
-├── notebooks/                  # notebook huấn luyện trên Google Colab (YOLO11n, YOLOv5n, bộ phân loại)
-├── reports/                    # báo cáo kết quả (.md): audit, phân tích YOLO, pipeline, Test chính thức, so sánh YOLOv5n
+├── notebooks/                  # notebook huấn luyện trên Google Colab (YOLO11n, bộ phân loại)
+├── reports/                    # báo cáo kết quả (.md): audit, phân tích YOLO, pipeline, Test chính thức, so sánh Faster R-CNN
 ├── scripts/                    # các bước đánh số theo thứ tự thực hiện (00_ … 99_), scripts/web/ = chạy và triển khai website
 ├── server/                     # máy chủ AI FastAPI (gọi đúng pipeline đã khóa)
 ├── src/livercancer/            # thư viện chính: data, intake, detection, roi, classification, evidence, pipeline
@@ -161,7 +162,7 @@ Thứ tự các script:
 | 00–05 | `00_check_env` → `05_check_mri_bbox_mismatch` | Kiểm tra môi trường, audit dữ liệu (chỉ đọc), cách ly nhãn lỗi |
 | 10–42 | `10_make_splits` → `42_verify_zip` | Chia tập theo bệnh nhân, tạo lát 2D + nhãn YOLO, QA, đóng gói ZIP + SHA256, sinh notebook Colab |
 | 50–61 | `50_analyze_yolo_run` → `61_yolo_predict_nifti` | Phân tích run YOLO, chọn ngưỡng trên Validation, suy luận |
-| 71–78 | `71_eval_roi_val` → `78_yolov5n_comparison` | Đánh giá Tumor Zoom, kiểm toán 3D, thí nghiệm đối chứng YOLOv5n |
+| 71–79 | `71_eval_roi_val` → `79_frcnn_comparison` | Đánh giá Tumor Zoom, kiểm toán 3D, thí nghiệm đối chứng Faster R-CNN |
 | 80–87 | `80_build_cls_dataset` → `87_modality_classifier` | Dữ liệu vùng tổn thương, huấn luyện / đánh giá bộ phân loại, nhận dạng CT/MRI |
 | 90–96 | `90_run_pipeline` → `96_final_test` | Pipeline đầy đủ, đánh giá toàn bộ Validation, cổng bằng chứng, khóa cấu hình, Test một lần |
 | 97–99 | `97_export_web_metrics` → `99_build_test3d_website` | Số liệu cho website, kiểm thử trình duyệt, bộ ca thử |
@@ -236,7 +237,7 @@ Huấn luyện chính chạy trên **Google Colab (T4)**. Máy local chỉ tiề
 6. **Huấn luyện bộ phân loại** trên Colab: `notebooks/05_train_classifier_colab.ipynb`. Kế hoạch: [docs/PHASE5_CLASSIFICATION_PLAN.md](docs/PHASE5_CLASSIFICATION_PLAN.md).
 7. **Pipeline trên toàn bộ Validation và cổng bằng chứng:** `scripts/92_pipeline_validation.py`, `93_limitations_analysis.py`, `94_gate_comparison.py`.
 8. **Khóa cấu hình, rồi chạy Test một lần:** `scripts/95_final_test_lock.py` → `scripts/96_final_test.py`.
-9. *(Tùy chọn)* **Đối chứng YOLOv5n:** `notebooks/04_train_yolov5n_{ct,mri}_comparison.ipynb` → `scripts/78_yolov5n_comparison.py`.
+9. *(Tùy chọn)* **Đối chứng Faster R-CNN (CT):** `scripts/79_frcnn_comparison.py` (`train` → `eval --split val` → `eval --split test` một lần → `bench` → `report`).
 
 ---
 
@@ -277,4 +278,4 @@ Danh sách đầy đủ và hướng phát triển: [reports/pipeline_validation
 
 - **Mã nguồn:** thuộc đồ án tốt nghiệp của tác giả, chia sẻ để phục vụ đánh giá và học tập.
 - **Dữ liệu:** tuân theo giấy phép của bộ dữ liệu gốc (PLC-CECT: CC BY 4.0; LLD-MMRI-MedSAM2: CC BY-NC 4.0, không phân phối lại). Khi dùng dữ liệu, hãy trích dẫn các công trình gốc ở mục 3.
-- **Thư viện chính:** Ultralytics YOLO11 / YOLOv5, PyTorch, timm (ResNet-18, Swin-T), FastAPI, React.
+- **Thư viện chính:** Ultralytics YOLO11, PyTorch, torchvision (Faster R-CNN), timm (ResNet-18, Swin-T), FastAPI, React.

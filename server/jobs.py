@@ -44,6 +44,7 @@ class Job:
     header_modality: str | None = None
     requested: str | None = None
     client: str = ""
+    detector: str = "yolo11n"                # yolo11n (main pipeline) | frcnn (CT comparison, detection only)
     force: bool = False
     timed_out: bool = False
     cancelled: bool = False
@@ -92,8 +93,8 @@ class JobManager:
             return sum(j.state in ("queued", "running") and j.client == client for j in self.jobs.values())
 
     def submit(self, files: list[tuple[str, Path, str]], tmp: Path, header_modality: str | None, requested: str | None,
-               client: str = "") -> Job:
-        job = Job(uuid.uuid4().hex, files, tmp, header_modality, requested, client)
+               client: str = "", detector: str = "yolo11n") -> Job:
+        job = Job(uuid.uuid4().hex, files, tmp, header_modality, requested, client, detector=detector)
         with self.lock:
             self.jobs[job.id] = job
         self.q.put(job.id)
@@ -160,7 +161,7 @@ class JobManager:
                     job.files = []
                     shutil.rmtree(job.tmp, ignore_errors=True)          # inputs are in memory now
                 mod, info = self.service.decide_modality(job.loaded, job.header_modality, job.requested, progress, job.force)
-                job.result, job.viewer = self.service.run_models(job.loaded, mod, info, progress)
+                job.result, job.viewer = self.service.run_models(job.loaded, mod, info, progress, job.detector)
                 job.loaded = None
                 job.state, job.stage_key, job.stage, job.progress = "done", "done", "Hoàn thành", None
             except ModalityConflict as e:                               # ask; the images stay in memory until the TTL

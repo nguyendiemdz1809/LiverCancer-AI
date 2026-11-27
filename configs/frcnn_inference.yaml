@@ -1,0 +1,14 @@
+# Faster R-CNN ResNet-50 FPN (CT only) used on the website as a COMPARISON detector, chosen by the user per analysis.
+# It is NOT part of the locked pipeline: YOLO11n stays the main detector; Tumor Zoom / Hybrid / Evidence Gate were chosen
+# for YOLO11n, so with Faster R-CNN the website only detects and zooms (no classification).
+# Weights: scripts/79_frcnn_comparison.py (trained 2026-11-26/27, best epoch 3), sha256 checked when loaded.
+# `conf` = operating threshold chosen on CT Validation with the project rule (argmax F2, IoU >= 0.5, grid 0.01):
+# outputs/runs/comparison/frcnn_ct/eval/ct_val.json -> threshold_choice.conf. Never tuned on Test.
+ct:
+  weights: outputs/runs/comparison/frcnn_ct/frcnn_r50fpn_img512_comparison/best.pt
+  sha256: b615b10bfa6ac431db11bc4991560c23ede98a746ef22cab5c41925985e1ceab
+  conf: 0.28
+  conf_source: outputs/runs/comparison/frcnn_ct/eval/ct_val.json
+  imgsz: 512
+  max_det: 300
+  batch_size: 4      # 4 GB GPU
