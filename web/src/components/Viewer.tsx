@@ -111,7 +111,10 @@ function ZoomPair({ sel, r3, isTwoD, onOpen, det = "YOLO" }: {
   );
 }
 
-export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; jobId: string | null; onState?: (s: ViewerState) => void }) {
+export default function Viewer({ res, jobId, onState, startAt }: {
+  res: AnalysisResult; jobId: string | null; onState?: (s: ViewerState) => void;
+  startAt?: { volume: string; k: number } | null;   // open at this slice (switching between two detectors' results of one case)
+}) {
   const b = res.branches[0];
   const det = detShort(res);
   const isTwoD = res.is_2d;
@@ -147,7 +150,11 @@ export default function Viewer({ res, jobId, onState }: { res: AnalysisResult; j
   const drawSeq = useRef(0);
   const multi = !isTwoD && b.volumes.some((v) => v.n_slices > 1);
 
-  const [target, setTarget] = useState({ volume: b.view.volume, k: b.view.slice, n: b.view.n_slices });
+  const [target, setTarget] = useState(() => {
+    const v = !isTwoD && startAt ? b.volumes.find((x) => x.name === startAt.volume) : undefined;
+    return v ? { volume: v.name, k: Math.max(0, Math.min(v.n_slices - 1, startAt!.k)), n: v.n_slices }
+      : { volume: b.view.volume, k: b.view.slice, n: b.view.n_slices };
+  });
   const targetRef = useRef(target);
   targetRef.current = target;
   const tvol = target.volume;

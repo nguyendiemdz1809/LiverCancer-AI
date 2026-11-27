@@ -20,8 +20,8 @@ function Row({ k, label, value, sub }: { k: string; label: string; value: string
   );
 }
 
-export default function ResultPanel({ res, state, onReset, jobId, onRerun }: {
-  res: AnalysisResult; state: ViewerState | null; onReset: () => void; jobId: string | null; onRerun?: (d: Detector) => void;
+export default function ResultPanel({ res, state, onReset, jobId, onRerun, otherDone }: {
+  res: AnalysisResult; state: ViewerState | null; onReset: () => void; jobId: string | null; onRerun?: (d: Detector) => void; otherDone?: boolean;
 }) {
   const b = res.branches[0];
   const det = detShort(res);
@@ -200,8 +200,9 @@ export default function ResultPanel({ res, state, onReset, jobId, onRerun }: {
         <button className="btn btn-ghost" onClick={() => downloadReport(res, st)}>Tải báo cáo (HTML)</button>
         <button className="btn btn-ghost" onClick={() => printReport(res, st)} title="Mở hộp thoại In của trình duyệt; chọn &quot;Lưu dưới dạng PDF&quot;">In / Lưu PDF</button>
         {res.modality === "ct" && onRerun && (
-          <button className="btn btn-ghost wide" onClick={() => onRerun(other)} title="Tải lại đúng các tệp vừa phân tích và chạy bằng mô hình phát hiện còn lại">
-            So sánh: phân tích lại bằng {DETECTOR_NAME[other]}
+          <button className="btn btn-ghost wide" onClick={() => onRerun(other)}
+            title={otherDone ? "Kết quả của mô hình còn lại vẫn được giữ; bấm để xem" : "Chạy đúng các tệp vừa phân tích bằng mô hình phát hiện còn lại; kết quả hiện tại vẫn được giữ"}>
+            {otherDone ? `Xem kết quả ${DETECTOR_NAME[other]}` : `So sánh: phân tích thêm bằng ${DETECTOR_NAME[other]}`}
           </button>
         )}
         <button className="btn btn-primary" onClick={onReset}>Phân tích ảnh khác</button>

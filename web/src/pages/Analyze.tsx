@@ -5,6 +5,9 @@ import ResultPanel from "../components/ResultPanel";
 import Viewer, { type ViewerState } from "../components/Viewer";
 
 type Phase = "idle" | "busy" | "confirm" | "done" | "error";
+type Run = { jobId: string; result: AnalysisResult; elapsed: number };
+type Runs = Partial<Record<Detector, Run>>;
+const DETS: Detector[] = ["yolo11n", "frcnn"];
 const EXT_2D = /\.(png|jpe?g|dcm|dicom|ima)$/i;
 const EXT_3D = /\.(nii\.gz|nii|zip|dcm|dicom|ima)$/i;
 const STEPS: { key: string; label: string; d3?: boolean }[] = [
@@ -68,12 +71,16 @@ export default function Analyze() {
   const [detector, setDetector] = useState<Detector>("yolo11n");
   const detRef = useRef<Detector>("yolo11n");
   const dimsRef = useRef<Dims>("2d");
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  // Finished results of the SAME files, one per detector (CT: YOLO11n and Faster R-CNN), kept side by side so both can
+  // be shown in turn; new files, another modality or "Phân tích ảnh khác" clear them.
+  const [runs, setRuns] = useState<Runs>({});
+  const runsRef = useRef<Runs>({});
+  const [shown, setShown] = useState<Detector>("yolo11n");
   const [vstate, setVstate] = useState<ViewerState | null>(null);
+  const keepAt = useRef<{ volume: string; k: number } | null>(null);   // slice to reopen at after switching detector
   const [drag, setDrag] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
   const t0 = useRef(0);
-  const jobRef = useRef<string | null>(null);
+  const jobRef = useRef<string | null>(null);                 // the job being analysed (not yet in `runs`)
   const uploadRef = useRef<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dirRef = useRef<HTMLInputElement>(null);
@@ -98,6 +105,7 @@ export default function Analyze() {
     return () => {
       alive.current = false; window.clearTimeout(timer);
       if (jobRef.current) deleteJob(jobRef.current);
+      Object.values(runsRef.current).forEach((r) => r && deleteJob(r.jobId));
       if (uploadRef.current) deleteUpload(uploadRef.current);
     };
   }, []);
@@ -107,17 +115,26 @@ export default function Analyze() {
     if (dirRef.current) dirRef.current.value = "";
   };
 
-  const reset = useCallback(() => {
+  const putRuns = (r: Runs) => { runsRef.current = r; setRuns(r); };
+
+  // Stops the analysis in progress (if any); finished results stay.
+  const cancelActive = useCallback(() => {
     if (jobRef.current) deleteJob(jobRef.current);          // also cancels a running analysis on the server
     if (uploadRef.current) deleteUpload(uploadRef.current);
     jobRef.current = uploadRef.current = null;
-    setPhase("idle"); setFiles([]); setResult(null); setVstate(null); setError(""); setPct(null); setStage("upload"); setDetail(""); setNeed(null);
-    clearInputs();
   }, []);
+
+  const reset = useCallback(() => {
+    cancelActive();
+    Object.values(runsRef.current).forEach((r) => r && deleteJob(r.jobId));
+    putRuns({});
+    setPhase("idle"); setFiles([]); setVstate(null); setError(""); setPct(null); setStage("upload"); setDetail(""); setNeed(null);
+    clearInputs();
+  }, [cancelActive]);
 
   const fail = (msg: string) => { setError(msg); setPhase("error"); };
 
-  const follow = useCallback(async (jobId: string) => {
+  const follow = useCallback(async (jobId: string, det: Detector) => {
     for (;;) {
       await new Promise((r) => setTimeout(r, 600));
       if (!alive.current || jobRef.current !== jobId) return;
@@ -127,7 +144,11 @@ export default function Analyze() {
       setPct(j.progress);
       setDetail(j.queue_position ? `Đang chờ đến lượt (vị trí ${j.queue_position}).` : j.stage);
       if (j.state === "needs_confirm") { setNeed(j.need ?? null); setPhase("confirm"); return; }
-      if (j.state === "done" && j.result) { setElapsed(Math.round((Date.now() - t0.current) / 1000)); setResult(j.result); setPhase("done"); return; }
+      if (j.state === "done" && j.result) {
+        const run: Run = { jobId, result: j.result, elapsed: Math.round((Date.now() - t0.current) / 1000) };
+        jobRef.current = null;
+        putRuns({ ...runsRef.current, [det]: run }); setShown(det); setVstate(null); setPhase("done"); return;
+      }
       if (j.state === "error") { fail(j.error || "Không phân tích được ảnh."); return; }
     }
   }, []);
@@ -138,10 +159,11 @@ export default function Analyze() {
       const uid = await uploadFiles(fs, (p) => setPct(p));
       uploadRef.current = uid;
       setStage("format"); setPct(null);
-      const { job_id } = await analyzeUpload(uid, modRef.current ?? "auto", dimsRef.current, modRef.current === "ct" ? detRef.current : "yolo11n");
+      const det: Detector = modRef.current === "ct" ? detRef.current : "yolo11n";
+      const { job_id } = await analyzeUpload(uid, modRef.current ?? "auto", dimsRef.current, det);
       uploadRef.current = null;
       jobRef.current = job_id;
-      await follow(job_id);
+      await follow(job_id, det);
     } catch (e) {
       if (uploadRef.current) { deleteUpload(uploadRef.current); uploadRef.current = null; }
       if (alive.current) fail((e as ApiError).message);
@@ -151,21 +173,32 @@ export default function Analyze() {
   const confirm = useCallback(async (m: Modality) => {
     if (!jobRef.current) return;
     setPhase("busy"); setStage("modality"); setNeed(null); setMod(m); modRef.current = m;
-    try { await confirmModality(jobRef.current, m); await follow(jobRef.current); }
+    try { await confirmModality(jobRef.current, m); await follow(jobRef.current, m === "ct" ? detRef.current : "yolo11n"); }
     catch (e) { fail((e as ApiError).message); }
   }, [follow]);
 
   const busy = phase === "busy" || phase === "confirm";
+  const cur = runs[shown] ?? null;
+  const nRuns = DETS.filter((d) => runs[d]).length;
   const chooseMod = (m: Modality) => {
     if (busy) return; if (phase !== "idle") reset(); setMod(m); modRef.current = m;
     if (m === "mri") { setDetector("yolo11n"); detRef.current = "yolo11n"; }      // Faster R-CNN exists for CT only
   };
-  const chooseDet = (d: Detector) => { if (busy) return; if (phase !== "idle") reset(); setDetector(d); detRef.current = d; };
-  // "So sánh": the same files (still in this page) uploaded again and analysed with the other detector.
+  // "So sánh": show the other detector's result if it exists; otherwise upload the same files (still in this page) again
+  // and analyse them with the other detector. The result already shown is kept.
   const rerun = (d: Detector) => {
-    if (busy || !files.length) return;
-    const fs = files;
-    reset(); setFiles(fs); setDetector(d); detRef.current = d; start(fs);
+    if (busy) return;
+    if (vstate && !runsRef.current[shown]?.result.is_2d) keepAt.current = { volume: vstate.view.volume, k: vstate.view.slice };
+    setDetector(d); detRef.current = d;
+    if (runsRef.current[d]) { cancelActive(); setShown(d); setVstate(null); setError(""); setPhase("done"); return; }
+    if (!files.length) return;
+    cancelActive(); setError(""); setVstate(null); start(files);
+  };
+  const chooseDet = (d: Detector) => {
+    if (busy) return;
+    if (files.length && Object.keys(runsRef.current).length) return rerun(d);       // same case: keep both results
+    if (phase !== "idle") reset();
+    setDetector(d); detRef.current = d;
   };
   const chooseDims = (d: Dims) => { if (busy) return; if (phase !== "idle") reset(); setDims(d); dimsRef.current = d; clearInputs(); };
 
@@ -227,10 +260,10 @@ export default function Analyze() {
               {mod === "ct" && (
                 <div className="det2" role="radiogroup" aria-label="Chọn mô hình phát hiện">
                   <button role="radio" aria-checked={detector === "yolo11n"} className={detector === "yolo11n" ? "on" : ""} disabled={busy} onClick={() => chooseDet("yolo11n")}>
-                    <b>YOLO11n</b><small>mô hình chính, có phân loại</small>
+                    <b>YOLO11n{runs.yolo11n && <span className="det-ok" title="Đã có kết quả cho ca này"> ✓</span>}</b><small>mô hình chính, có phân loại</small>
                   </button>
                   <button role="radio" aria-checked={detector === "frcnn"} className={detector === "frcnn" ? "on" : ""} disabled={busy || health?.comparison?.frcnn === "missing"} onClick={() => chooseDet("frcnn")}>
-                    <b>Faster R-CNN</b><small>đối chứng, chỉ khoanh vùng</small>
+                    <b>Faster R-CNN{runs.frcnn && <span className="det-ok" title="Đã có kết quả cho ca này"> ✓</span>}</b><small>đối chứng, chỉ khoanh vùng</small>
                   </button>
                 </div>
               )}
@@ -289,12 +322,17 @@ export default function Analyze() {
               {phase === "error" && (
                 <div className="notice danger" role="alert">
                   <b>Không thể phân tích ảnh này.</b> {error}
-                  <div style={{ marginTop: 10 }}><button className="btn btn-ghost small" onClick={reset}>Chọn ảnh khác</button></div>
+                  <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {DETS.filter((d) => runs[d]).map((d) => (
+                      <button key={d} className="btn btn-ghost small" onClick={() => rerun(d)}>Xem lại kết quả {DETECTOR_NAME[d]}</button>
+                    ))}
+                    <button className="btn btn-ghost small" onClick={reset}>Chọn ảnh khác</button>
+                  </div>
                 </div>
               )}
-              {phase === "done" && result && (
-                <p className="small done-line" style={{ margin: 0 }}><span className="ok-dot">✓</span> Hoàn thành. AI xử lý {(result.timings_s.total ?? 0).toLocaleString("vi-VN")} giây
-                  {elapsed ? `; tổng thời gian kể cả tải lên ${elapsed} giây` : ""}.</p>
+              {phase === "done" && cur && (
+                <p className="small done-line" style={{ margin: 0 }}><span className="ok-dot">✓</span> Hoàn thành{nRuns > 1 ? ` (${DETECTOR_NAME[shown]})` : ""}. AI xử lý {(cur.result.timings_s.total ?? 0).toLocaleString("vi-VN")} giây
+                  {cur.elapsed ? `; tổng thời gian kể cả tải lên ${cur.elapsed} giây` : ""}.</p>
               )}
             </section>
 
@@ -311,8 +349,20 @@ export default function Analyze() {
           {/* ---------------- centre: viewer */}
           <section className="card ws-center" aria-label="Ảnh phân tích">
             <h2 className="ws-h"><Svg d={P.image} size={20} /> Ảnh phân tích</h2>
-            {phase === "done" && result ? (
-              <Viewer key={jobRef.current ?? ""} res={result} jobId={jobRef.current} onState={setVstate} />
+            {phase === "done" && cur ? (
+              <>
+                {nRuns > 1 && (
+                  <div className="det-switch" role="tablist" aria-label="Kết quả theo mô hình phát hiện">
+                    <span className="small muted">Cùng ca, xem kết quả của:</span>
+                    {DETS.filter((d) => runs[d]).map((d) => (
+                      <button key={d} role="tab" aria-selected={shown === d} className={shown === d ? "on" : ""} onClick={() => rerun(d)}>
+                        {DETECTOR_NAME[d]}<small>{runs[d]!.result.case?.regions3d?.length ?? runs[d]!.result.branches[0]?.regions.length ?? 0} vùng</small>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <Viewer key={cur.jobId} res={cur.result} jobId={cur.jobId} onState={setVstate} startAt={keepAt.current} />
+              </>
             ) : (
               <>
               {dims === "3d" && (
@@ -331,8 +381,9 @@ export default function Analyze() {
 
           {/* ---------------- right: results */}
           <aside className="ws-right">
-            {phase === "done" && result ? (
-              <ResultPanel res={result} state={vstate} onReset={reset} jobId={jobRef.current} onRerun={files.length ? rerun : undefined} />
+            {phase === "done" && cur ? (
+              <ResultPanel key={cur.jobId} res={cur.result} state={vstate} onReset={reset} jobId={cur.jobId}
+                onRerun={files.length ? rerun : undefined} otherDone={nRuns > 1} />
             ) : (
               <section className="card rp rp-empty" aria-label="Kết quả phân tích">
                 <div className="rp-head"><h2>Kết quả phân tích</h2></div>

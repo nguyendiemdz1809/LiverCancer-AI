@@ -6,7 +6,8 @@ Nothing is analysed; the already-read images wait in memory (TTL) until the user
 (POST /api/jobs/{id}/confirm), or cancels.
 Uploaded files live in a private temporary folder per job and are removed as soon as they are read (and in any case
 when the job ends). Nothing is written to the project folders; nothing about the patient is logged.
-Slices of 3D inputs are kept for the slice viewer of the 2 most recent results only (RAM bound), until the TTL.
+Slices of 3D inputs are kept for the slice viewer of the 4 most recent results only (RAM bound), until the TTL
+(4 so that a YOLO11n and a Faster R-CNN result of the same case can both stay open for side-by-side viewing).
 A running analysis longer than `timeout_s` is stopped at its next progress report (every few YOLO batches) and ends
 with a plain error, so one input cannot hold the GPU indefinitely. Deleting a job (DELETE /api/jobs/{id}, the
 "Hủy" button) also cancels it: a queued job is skipped, a running one stops at its next progress report.
@@ -24,7 +25,7 @@ from pathlib import Path
 
 from server.service import AnalysisService, ModalityConflict, UserError
 
-KEEP_VIEWERS = 2
+KEEP_VIEWERS = 4
 TIMEOUT_VI = "Phân tích vượt quá thời gian cho phép ({m} phút) nên đã dừng. Hãy thử với ít tệp hơn hoặc ảnh nhỏ hơn."
 
 

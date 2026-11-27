@@ -1,6 +1,6 @@
 # So sánh Faster R-CNN ResNet-50 FPN và YOLO11n trên CT (thí nghiệm đối chứng)
 
-_Sinh bởi `scripts/79_frcnn_comparison.py --stage report` lúc 2026-11-27 18:16. Chỉ số liệu đo được. YOLO11n vẫn là mô hình chính của đồ án, không bị thay thế._
+_Sinh bởi `scripts/79_frcnn_comparison.py --stage report` lúc 2026-11-27 19:46. Chỉ số liệu đo được. YOLO11n vẫn là mô hình chính của đồ án, không bị thay thế._
 
 ## 1. Mục tiêu và lý do chọn Faster R-CNN
 
@@ -118,6 +118,24 @@ Nguồn: `outputs/runs/comparison/frcnn_ct/eval/bench_run*.json`.
 
 **Đường huấn luyện (Hình 8.2):** Faster R-CNN đạt mAP50-95 trên Val tốt nhất ở epoch 3 (0,220), sau đó dao động trong khoảng 0,18–0,21 và dừng sớm ở epoch 8. YOLO11n đạt đỉnh 0,282 ở epoch 15. Mô hình lớn hơn hội tụ sớm hơn nhưng ở mức thấp hơn, có dấu hiệu quá khớp với tập Train (loss train giảm đều từ 0,085 xuống 0,033 trong khi mAP trên Val không tăng).
 
+### 9c. Mức ca sau Tumor Zoom (như trên website), chỉ Validation
+
+Đo thêm ngày 27/11/2026 theo câu hỏi "trên website Faster R-CNN trông gọn hơn": cả hai mô hình đi qua cùng bước nối vùng 3D (Tumor Zoom, `configs/roi.yaml`, không lọc vùng, đúng cài đặt website) và cùng cách chấm của `scripts/71_eval_roi_val.py` (210 volume CT Validation; một tổn thương được tìm thấy khi có vùng có IoU ≥ 0,3 với nó trên cùng lát). Số của YOLO11n lấy từ bộ đệm của `71_` và khớp đúng `outputs/predictions/roi_val/ct/choice.json`. Nguồn: `outputs/runs/comparison/frcnn_ct/eval/ct_val_volume.json` (`79_ --stage volume-val`). Không dùng Test.
+
+| Validation, 210 volume CT | YOLO11n (ngưỡng 0,12) | Faster R-CNN (ngưỡng 0,28) |
+|---|---|---|
+| Volume có tổn thương được tìm thấy | **152/163 (93,3%)** | 149/163 (91,4%) |
+| Tổn thương 3D được tìm thấy | **177/275 (64,4%)** | 173/275 (62,9%) |
+| Tổn thương nhỏ được tìm thấy | 14/69 (20,3%) | 14/69 (20,3%) |
+| Bệnh nhân ung thư có ít nhất một vùng trúng | **42/42** | 40/42 (bỏ sót hẳn P0132, P0133) |
+| Vùng giả trung bình mỗi volume | **5,04** | 5,56 |
+| Số vùng trung bình mỗi volume | **6,5** | 7,1 |
+| Người nhóm chứng có ít nhất một vùng | 11/12 | 12/12 |
+
+- Ở mức ca, YOLO11n cũng tốt hơn nhẹ: tìm thấy nhiều volume và tổn thương hơn, ít vùng giả hơn. Hai bệnh nhân Faster R-CNN bỏ sót hoàn toàn (P0132, P0133, đều ICC) là hai ca YOLO11n tìm thấy nhưng cổng bằng chứng từ chối vì vùng yếu.
+- Theo từng volume, Faster R-CNN cho ít vùng hơn YOLO11n ở 78/210 volume, nhiều hơn ở 103 và bằng nhau ở 29. Vì vậy khi xem vài ca trên website, có thể gặp ca Faster R-CNN trông gọn hơn (ví dụ P0267 pha C1: 5 vùng so với 9), nhưng tính trên toàn bộ Validation thì ngược lại.
+- Nếu hạ ngưỡng Faster R-CNN xuống 0,12, số tổn thương tìm thấy tăng lên 65,5% (tổn thương nhỏ 29,0%) nhưng vùng giả tăng lên 9,3 mỗi volume, gần gấp đôi YOLO11n.
+
 ### 9b. Tốc độ và tài nguyên
 
 - **Kích thước:** Faster R-CNN có 41,3 triệu tham số (gấp khoảng 16 lần YOLO11n: 2,6 triệu), checkpoint 166 MB (gấp khoảng 30 lần: 5,5 MB).
@@ -143,6 +161,7 @@ Nguồn: `outputs/runs/comparison/frcnn_ct/eval/bench_run*.json`.
 |---|---|
 | Phát hiện tổn thương CT | **YOLO11n tốt hơn** (Test: mAP50 +6,6 điểm, mAP50-95 +5,6, F1 +4,7; Val: mAP50 +7,5) |
 | Ở ngưỡng vận hành | YOLO11n tìm đúng nhiều hơn và báo nhầm ít hơn (Val: +421 box đúng, −498 box nhầm) |
+| Mức ca sau Tumor Zoom (Validation) | YOLO11n tốt hơn nhẹ: volume 93,3% so với 91,4%, tổn thương 64,4% so với 62,9%, vùng giả 5,0 so với 5,6 mỗi volume |
 | Tổn thương nhỏ | Cả hai đều yếu (recall khoảng 0,18–0,30 tùy ngưỡng); mô hình lớn hơn không khắc phục được |
 | Tốc độ | **YOLO11n nhanh hơn khoảng 6–7 lần** (9 so với 61 ms/ảnh) |
 | Tài nguyên | YOLO11n nhỏ hơn khoảng 16 lần về tham số, 31 lần về GFLOPs, 30 lần về dung lượng |

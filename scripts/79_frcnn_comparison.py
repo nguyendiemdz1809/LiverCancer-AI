@@ -533,12 +533,100 @@ def report(_a) -> int:
     return 0
 
 
+def _roi71():
+    """scripts/71_eval_roi_val.py as a module (same Val volumes, GT linking, track building and hit rule)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("roi71", ROOT / "scripts" / "71_eval_roi_val.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def volume_val(a) -> int:
+    """Validation only (never Test): case-level comparison after Tumor Zoom, as shown on the website.
+    Faster R-CNN scans every slice of the 210 usable CT Val volumes (kept boxes >= 0.05, cached); YOLO11n uses the
+    cache of scripts/71_eval_roi_val.py (locked detector, conf 0.12, same volumes). Both go through the same merge ->
+    link (configs/roi.yaml, no track filter = the website setting) and the same evaluation of 71_ (GT lesion hit when a
+    track has IoU >= 0.3 with it on a shared slice; also 0.5). Faster R-CNN at its own threshold 0.28 and at 0.12."""
+    from livercancer.config import load_paths
+    from livercancer.data.slices import load_volume_uint8, slice_image
+    from livercancer.data.sources import image_path, lesion_mask_path
+    from livercancer.detection.frcnn_detector import FrcnnDetector
+    from livercancer.roi.pipeline import load_roi_config
+    r71 = _roi71()
+    paths = load_paths()
+    data = DATA["val"]
+    vols = r71.val_volumes(data)
+    keys = [(v["patient_id"], v["series"]) for v in vols]
+    raw = OUT / "eval" / "roi_val_raw_dets_frcnn.csv"
+    if a.rescan or not raw.exists():
+        det = FrcnnDetector.from_config()
+        print(f"scan Faster R-CNN: {len(vols)} CT Val volumes on {det.device}, boxes >= 0.05", flush=True)
+        t0 = time.time()
+        import csv
+        tmp = raw.with_suffix(".part")
+        with open(tmp, "w", newline="", encoding="utf-8") as f:
+            w = csv.writer(f)
+            w.writerow(["patient_id", "series", "n_slices", "slice_k", "x0", "y0", "x1", "y1", "conf"])
+            for i, v in enumerate(vols):
+                vol = load_volume_uint8(image_path(paths, "ct", v["patient_id"], v["series"]))
+                imgs = [slice_image(vol, k) for k in range(vol.shape[2])]
+                dets = det.predict(imgs, conf=0.05)
+                w.writerow([v["patient_id"], v["series"], len(imgs), -1, "", "", "", "", ""])
+                for k, d in enumerate(dets):
+                    for x in d:
+                        w.writerow([v["patient_id"], v["series"], len(imgs), k, round(x.x0, 2), round(x.y0, 2), round(x.x1, 2), round(x.y1, 2), round(x.conf, 5)])
+                if (i + 1) % 10 == 0:
+                    el = time.time() - t0
+                    print(f"  {i + 1}/{len(vols)}  {el / 60:.1f} min, ETA {el / (i + 1) * (len(vols) - i - 1) / 60:.1f} min", flush=True)
+        tmp.replace(raw)
+    params = load_roi_config("ct")
+    labels = {v["patient_id"]: v["label"] for v in vols}
+    gt, pos = r71.gt_by_volume(data)
+    unknown = {k: r71.mask_slices(lesion_mask_path(paths, "ct", *k)) - pos.get(k, set()) for k in keys}
+
+    def run(raw_csv: Path, thr: float) -> dict:
+        dets, n = r71.load_scan(raw_csv)
+        miss = [k for k in keys if k not in n]
+        assert not miss, f"{len(miss)} volumes missing from {raw_csv}"
+        dets = {k: {s: [d for d in ds if d.conf >= thr] for s, ds in v.items()} for k, v in dets.items()}
+        pred, gtt = r71.build_tracks(keys, dets, gt, params)
+        m, recs = r71.evaluate("ct", keys, pred, gtt, unknown, labels, 1, thr, 0.3)
+        m5, _ = r71.evaluate("ct", keys, pred, gtt, unknown, labels, 1, thr, 0.5)
+        cancer = [k for k in keys if labels.get(k[0]) != "CN"]
+        cn = [k for k in keys if labels.get(k[0]) == "CN"]
+        per = lambda ks: round(sum(1 for r in recs if r["key"] in set(ks)) / max(1, len(ks)), 3)  # noqa: E731
+        fp_c = sum(1 for r in recs if r["status"] == "FP" and r["key"] in set(cancer))
+        return {"threshold": thr, "hit_iou_0.3": m, "hit_iou_0.5": {k: m5[k] for k in ("lesion_recall", "small_lesion_recall", "volume_recall")},
+                "regions_per_volume": round(len(recs) / len(keys), 3), "regions_per_cancer_volume": per(cancer),
+                "regions_per_cn_volume": per(cn), "fp_regions_per_cancer_volume": round(fp_c / max(1, len(cancer)), 3),
+                "n_volumes": len(keys), "n_cancer_volumes": len(cancer), "n_cn_volumes": len(cn)}
+
+    yolo_raw = ROOT / "outputs/predictions/roi_val/ct/raw_dets.csv"
+    thr_fr = json.loads((OUT / "eval" / "ct_val.json").read_text(encoding="utf-8"))["threshold_choice"]["conf"]
+    out = {"split": "val", "note": "Validation only; same volumes, Tumor Zoom linking and hit rule as scripts/71_eval_roi_val.py; no track filter (website setting)",
+           "roi_params": params, "yolo11n": run(yolo_raw, OP_CONF), "frcnn_own": run(raw, thr_fr), "frcnn_0.12": run(raw, OP_CONF),
+           "frcnn_raw": rel(raw), "frcnn_raw_sha256": sha256(raw), "yolo11n_raw": rel(yolo_raw), "time": datetime.now().isoformat(timespec="seconds")}
+    ref = json.loads((ROOT / "outputs/predictions/roi_val/ct/choice.json").read_text(encoding="utf-8"))["unfiltered"]
+    same = all(out["yolo11n"]["hit_iou_0.3"][k] == ref[k] for k in ("lesion_recall", "volume_recall", "fp_tracks", "kept_tracks"))
+    out["yolo11n_matches_71"] = same
+    dump(OUT / "eval" / "ct_val_volume.json", out)
+    for k in ("yolo11n", "frcnn_own", "frcnn_0.12"):
+        m = out[k]["hit_iou_0.3"]
+        print(f"{k:11s} thr {out[k]['threshold']}: volumes {m['volume_recall']} ({m['volumes_with_lesion']}), lesions {m['lesion_recall']}, "
+              f"small {m['small_lesion_recall']}, FP/vol {m['fp_tracks_per_volume']}, regions/vol {out[k]['regions_per_volume']}, "
+              f"CN vols with region {m.get('cn_volumes_with_track')}, CN patients {m.get('cn_patients_with_track')}", flush=True)
+    print("YOLO11n identical to 71_ choice.json:", same)
+    return 0 if same else 1
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--stage", required=True, choices=["smoke", "train", "check-evaluator", "eval", "bench", "notebook", "report"])
+    ap.add_argument("--stage", required=True, choices=["smoke", "train", "check-evaluator", "eval", "bench", "volume-val", "notebook", "report"])
     ap.add_argument("--split", choices=["val", "test"], default="val")
+    ap.add_argument("--rescan", action="store_true", help="volume-val: re-run Faster R-CNN on all Val volumes")
     a = ap.parse_args()
-    return {"smoke": smoke, "train": train_local, "check-evaluator": check_evaluator, "eval": evaluate, "bench": bench,
+    return {"smoke": smoke, "train": train_local, "check-evaluator": check_evaluator, "eval": evaluate, "bench": bench, "volume-val": volume_val,
             "notebook": notebook, "report": report}[a.stage](a)
 
 

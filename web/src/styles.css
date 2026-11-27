@@ -683,3 +683,11 @@ details.more .info-row { padding-left: 0; padding-right: 0; }
   .fu-grid { grid-template-columns: minmax(0, 1fr); }
   .sv-grid, .det2 { grid-template-columns: 1fr; }
 }
+
+/* switch between the two detectors' results of the same case (CT: YOLO11n / Faster R-CNN) */
+.det-switch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -4px 0 12px; padding: 8px 10px; border: 1px dashed var(--primary); border-radius: 10px; background: var(--primary-soft); }
+.det-switch button[role=tab] { border: 1px solid var(--border); background: #fff; border-radius: 9px; padding: 6px 12px; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; color: var(--ink); display: inline-flex; align-items: baseline; gap: 6px; }
+.det-switch button[role=tab] small { font-weight: 400; color: var(--ink-3); font-size: 0.78rem; }
+.det-switch button[role=tab].on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.det-switch button[role=tab].on small { color: rgba(255,255,255,0.85); }
+.det-ok { color: var(--ok, #16a34a); font-weight: 700; }
