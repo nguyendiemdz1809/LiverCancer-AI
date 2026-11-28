@@ -68,6 +68,7 @@ Màn hình rộng từ 1200 px hiện đủ ba cột. Máy tính bảng hiện h
   - **Dải thumbnail**: mọi lát có vùng nghi ngờ, kèm độ tin cậy phát hiện. Bấm vào thumbnail để mở đúng lát đó.
 - Chỉ có mặt cắt **axial**. Chưa làm coronal/sagittal, vì box 2D không được chuyển sang mặt cắt khác khi chưa có phép chuyển tọa độ đã kiểm chứng.
 - **Zoom vùng nghi ngờ:** *Ảnh gốc (vùng cắt)* có khung tổn thương, đặt cạnh *Tumor Zoom*. Có nút chọn từng vùng; bấm vào ảnh để xem lớn.
+  Ngay dưới hai ảnh (ca 3D) là 4 ô **Vùng đang chọn**: vùng (và pha/chuỗi), phạm vi lát, độ tin cậy cao nhất, khối bao 3D (không phải kích thước khối u). Trước 2026-11-28 các ô này nằm ở cuối cột phải.
 - **Tumor Zoom trên màn hình** (`src/livercancer/roi/display.py`):
   - Cắt rộng quanh tổn thương: cận cảnh 2,2 lần cạnh box (tối thiểu 72 px), xung quanh 3 lần (tối thiểu 192 px).
   - Phóng tối đa 4 lần bằng nội suy bicubic. Không làm nét, không tạo chi tiết.
