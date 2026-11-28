@@ -579,11 +579,29 @@ export default function Viewer({ res, jobId, onState, startAt }: {
             )}
           </div>
           <ZoomPair sel={sel} r3={sel3d} isTwoD={isTwoD} det={det} onOpen={(src, title) => setBig({ src, title })} />
+          {!isTwoD && sel3d && (
+            <div className="sel-stats" aria-label="Vùng đang chọn">
+              <div className="ss"><span className="l">Vùng đang chọn</span>
+                <span className="v">Vùng {sel3d.num}{b.volumes.length > 1 ? ` · ${sel3d.volume}` : ""}</span>
+                <span className="s">{strong != null && sel3d.max_conf < strong ? "độ tin cậy thấp" : `phát hiện bởi ${det}`}</span></div>
+              <div className="ss"><span className="l">Phạm vi lát</span>
+                <span className="v tnum">{sel3d.k_first + 1}–{sel3d.k_last + 1}</span>
+                <span className="s">{sel3d.n_slices} lát có khung{sel3d.gap_slices ? `, ${sel3d.gap_slices} lát trống ở giữa` : ""}</span></div>
+              <div className="ss"><span className="l">Độ tin cậy cao nhất</span>
+                <span className="v tnum">{fmtNum(sel3d.max_conf)}</span>
+                <span className="s">trên các lát của vùng</span></div>
+              <div className="ss"><span className="l">Khối bao 3D</span>
+                <span className="v tnum">{sel3d.size_mm ? `${sel3d.size_mm.map((x) => fmtNum(x, 0)).join(" × ")} mm`
+                  : `${fmtNum(sel3d.bbox_vox.x_max - sel3d.bbox_vox.x_min, 0)} × ${fmtNum(sel3d.bbox_vox.y_max - sel3d.bbox_vox.y_min, 0)} px × ${sel3d.k_last - sel3d.k_first + 1} lát`}</span>
+                <span className="s">bao các khung 2D, không phải kích thước khối u</span></div>
+            </div>
+          )}
           {(sel || sel3d) && (
             <p className="small muted" style={{ margin: "8px 0 0" }}>
-              {sel ? `Vùng ${sel.rank}` : `Vùng ${sel3d!.num}`}: độ tin cậy phát hiện cao nhất {fmtNum(sel ? sel.confidence : sel3d!.max_conf)}
-              {!isTwoD && sel3d ? `, lát ${sel3d.k_first + 1}–${sel3d.k_last + 1}` : ""}
-              {!isTwoD && sel ? `; ảnh Zoom lấy trên lát đại diện ${sel.slice + 1}` : ""}
+              {!isTwoD && sel3d
+                ? (sel ? `Ảnh Zoom lấy trên lát đại diện ${sel.slice + 1} của vùng ${sel3d.num}` : "")
+                : <>{sel ? `Vùng ${sel.rank}` : `Vùng ${sel3d!.num}`}: độ tin cậy phát hiện cao nhất {fmtNum(sel ? sel.confidence : sel3d!.max_conf)}
+                  {!isTwoD && sel ? `; ảnh Zoom lấy trên lát đại diện ${sel.slice + 1}` : ""}</>}
               {!isTwoD && sel && (sel.volume !== target.volume || sel.slice !== target.k) && (
                 <> · <button className="linklike" onClick={() => { setPlaying(false); go(sel.slice, sel.volume); }}>Xem lát {sel.slice + 1}</button></>
               )}

@@ -140,22 +140,6 @@ export default function ResultPanel({ res, state, onReset, jobId, onRerun, other
         <Row k="time" label="Thời gian phân tích" value={`${vn(res.timings_s.total ?? 0, 1)} giây`} sub={res.device ? `trên ${res.device}` : undefined} />
       </div>
 
-      {!res.is_2d && r3 && (
-        <>
-          <h3 className="rp-h">Vùng đang chọn</h3>
-          <div className="info sel3d">
-            <Row k="sel_region" label="Vùng" value={`Vùng ${r3.num}${cs && cs.volumes.length > 1 ? ` · ${r3.volume}` : ""}`}
-              sub={strong != null && r3.max_conf < strong ? "độ tin cậy thấp" : undefined} />
-            <Row k="sel_range" label="Phạm vi lát" value={`${r3.k_first + 1}–${r3.k_last + 1}`}
-              sub={`${r3.n_slices} lát có khung${r3.gap_slices ? `, ${r3.gap_slices} lát trống ở giữa` : ""}; lát đại diện ${(st.sel && st.sel.id === r3.id ? st.sel.slice : r3.best_slice) + 1}`} />
-            <Row k="sel_conf" label="Độ tin cậy cao nhất" value={fmtNum(r3.max_conf)} sub={`${det}, trên các lát của vùng`} />
-            <Row k="sel_box" label="Khối bao 3D" value={r3.size_mm ? `${r3.size_mm.map((x) => fmtNum(x, 0)).join(" × ")} mm`
-              : `${fmtNum(r3.bbox_vox.x_max - r3.bbox_vox.x_min, 0)} × ${fmtNum(r3.bbox_vox.y_max - r3.bbox_vox.y_min, 0)} px × ${r3.k_last - r3.k_first + 1} lát`}
-              sub={`bao của các khung ${det} 2D, không phải kích thước hay thể tích khối u`} />
-          </div>
-        </>
-      )}
-
       <details className="mini more">
         <summary>Thông tin kỹ thuật</summary>
         <div className="info">
